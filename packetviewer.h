@@ -28,10 +28,11 @@ public:
     packetViewer(QWidget *parent = nullptr, const QColor* pallete = colors);
     void addIPbusPacketHeader();
     void addIPbusTransaction(TransactionType type, const quint8 nWords, const IPbusWord address, const IPbusWord ANDterm = 0, const IPbusWord ORterm = 0);
+    void displayResponse(IPbusWord * const response);
     void reinit();
 
     const QColor* getPallete(){return this->pallete;}
-    counter size(){return this->packetWords;}
+    counter packetSize(){return this->packetWords;}
 
 signals:
     void wordsAmountChanged();

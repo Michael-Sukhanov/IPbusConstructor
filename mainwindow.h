@@ -21,14 +21,20 @@ protected:
     bool eventFilter(QObject* , QEvent*);
 
 private:
+    QUdpSocket* socket;
+    IPbusWord request[maxWordsPerPacket], response[maxWordsPerPacket];
+    char* const Crequest = reinterpret_cast<char*>(request), * const Cresponse = reinterpret_cast<char*>(response);
     Ui::MainWindow *ui;
     TransactionType currentType = read;
     QHash<QString, TransactionType> CoresspondingTypes;
+    //become true after sending packet
+    bool sendFlag = false;
 
 private slots:
     void selectedTransactionChanged(const TransactionType type);
     void packetSizeChanged();
     void nWordsChanged();
-    void SendPacket();
+    void sendPacket();
+    void getResponse();
 };
 #endif // MAINWINDOW_H

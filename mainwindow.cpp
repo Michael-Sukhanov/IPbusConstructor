@@ -11,12 +11,15 @@ MainWindow::MainWindow(QWidget *parent)
     CoresspondingTypes["NIWRITE"] = nonIncrementingWrite;
     CoresspondingTypes["RMWSUM"]  = RMWsum;
     CoresspondingTypes["RMWBITS"] = RMWbits;
+    socket = new QUdpSocket(this);
     //find all radioButtons to connect them with onr slot
     QList<QRadioButton*> radioButtons = ui->centralwidget->findChildren<QRadioButton*>(QRegularExpression("radioButton_*"));
     QRadioButton* but;
     foreach (but, radioButtons)
         connect(but, &QRadioButton::clicked, this, [but, this](){selectedTransactionChanged(CoresspondingTypes[but->objectName().remove("radioButton_")]);});
     connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_PACKET_WIEVER, [=](){
+        if(sendFlag){ ui->treeWidget_PACKET_WIEVER->clear(); sendFlag = false;
+        ui->pushButton_SEND->setText("Send");}
         if(!ui->treeWidget_PACKET_WIEVER->topLevelItem(0)) ui->treeWidget_PACKET_WIEVER->addIPbusPacketHeader();
         const IPbusWord address = ui->lineEdit_ADDRESS->text().toUInt(nullptr, 16);
         const quint8     nWords = static_cast<quint8>(ui->lineEdit_NWORDS->text().toUInt(nullptr, 10));
@@ -27,6 +30,8 @@ MainWindow::MainWindow(QWidget *parent)
     //progress bar processing
     connect(ui->treeWidget_PACKET_WIEVER, &packetViewer::wordsAmountChanged, this, &MainWindow::packetSizeChanged);
     connect(ui->lineEdit_NWORDS, &QLineEdit::textEdited, this, &MainWindow::nWordsChanged);
+    connect(socket, &QUdpSocket::readyRead, this, &MainWindow::getResponse);
+    connect(ui->pushButton_SEND, &QPushButton::clicked, this, &MainWindow::sendPacket);
     ui->lineEdit_NWORDS->setValidator(new QRegExpValidator(QRegExp("[1-9]|[1-9][0-9]|1[0-9]{1,2}|2[0-4][0-9]|25[0-5]")));
     //installation of eventFilter for delete button
     ui->treeWidget_PACKET_WIEVER->installEventFilter(this);
@@ -93,7 +98,7 @@ void MainWindow::selectedTransactionChanged(const TransactionType type){
 }
 
 void MainWindow::packetSizeChanged(){
-    const counter newAmount = ui->treeWidget_PACKET_WIEVER->size();
+    const counter newAmount = ui->treeWidget_PACKET_WIEVER->packetSize();
     QProgressBar* request = ui->progressBar_WORDS;
     if(newAmount < 111)
         request->setStyleSheet(" QProgressBar::chunk {background-color: rgb( 67,255, 76);}");
@@ -106,7 +111,7 @@ void MainWindow::packetSizeChanged(){
 }
 
 void MainWindow::nWordsChanged(){
-    const counter currentFreeSpaceRequest = maxWordsPerPacket - ui->treeWidget_PACKET_WIEVER->size();
+    const counter currentFreeSpaceRequest = maxWordsPerPacket - ui->treeWidget_PACKET_WIEVER->packetSize();
     const quint8 currentNWords = static_cast<quint8>(ui->lineEdit_NWORDS->text().toUInt());
     bool addButtonEnabled = true;
     switch (currentType) {
@@ -129,7 +134,28 @@ void MainWindow::nWordsChanged(){
     ui->pushButton_ADD->setEnabled(addButtonEnabled);
 }
 
-void MainWindow::SendPacket(){
+void MainWindow::sendPacket(){
+    quint16 numWord = 0, transactionCounter = 0;
+    packetViewer* requestViewer = ui->treeWidget_PACKET_WIEVER;
+    request[numWord++] = requestViewer->topLevelItem(transactionCounter++)->child(0)->text(0).toUInt(nullptr, 16);
+    while(numWord < requestViewer->packetSize()){
+        QTreeWidgetItem* parentTransaction = requestViewer->topLevelItem(transactionCounter++);
+        for(quint16 i = 0; i < parentTransaction->childCount(); ++i)
+            request[numWord++] = parentTransaction->child(i)->text(0).toUInt(nullptr, 16);
+        parentTransaction->setFlags(Qt::ItemIsEnabled);
+    }
+    socket->writeDatagram(Crequest, requestViewer->packetSize() * sizeof (IPbusWord), QHostAddress::LocalHost, 50001);
+    sendFlag = true;
+    ui->pushButton_SEND->setText("Send once more");
+}
 
+void MainWindow::getResponse(){
+    if(socket->hasPendingDatagrams()){
+        quint16 responseSize = static_cast<quint16>(socket->pendingDatagramSize());
+        socket->readDatagram(Cresponse, responseSize);
+        for(quint16 i = 0; i < responseSize / sizeof(IPbusWord); ++i){
+            qDebug()<<QString::asprintf("0x%08X", response[i]);
+        }
+    }
 }
 

@@ -15,6 +15,8 @@ packetViewer::packetViewer(QWidget* parent, const QColor* pallete):QTreeWidget(p
 
 //add IPbus Header Item in tree
 void packetViewer::addIPbusPacketHeader(){
+    //all counters set to zero as only one packet is able
+    this->packetWords = 0, this->transactions = 0;
     //Create IPbus Packet Header
     PacketHeader header = PacketHeader(control);
     //Create parent Item with header
@@ -63,6 +65,11 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
         default: break;
     }
     emit wordsAmountChanged();
+}
+
+void packetViewer::displayResponse(IPbusWord * const response)
+{
+
 }
 
 
