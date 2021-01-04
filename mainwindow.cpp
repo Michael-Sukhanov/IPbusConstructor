@@ -5,6 +5,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow){
     ui->setupUi(this);
+    setWindowTitle(QCoreApplication::applicationName() + " v" + QCoreApplication::applicationVersion() + " alpha");
     CoresspondingTypes["WRITE"]   = write;
     CoresspondingTypes["READ"]    = read;
     CoresspondingTypes["NIREAD"]  = nonIncrementingRead;
@@ -24,7 +25,9 @@ MainWindow::MainWindow(QWidget *parent)
             ui->treeWidget_RESPONSE->clear();
             sendFlag = false;
             ui->pushButton_SEND->setText("Send");}
-        if(!ui->treeWidget_PACKET_WIEVER->topLevelItem(0)) ui->treeWidget_PACKET_WIEVER->addIPbusPacketHeader();
+        if(!ui->treeWidget_PACKET_WIEVER->topLevelItem(0)){
+            ui->pushButton_SEND->setEnabled(true);
+            ui->treeWidget_PACKET_WIEVER->addIPbusPacketHeader();}
         const IPbusWord address = ui->lineEdit_ADDRESS->text().toUInt(nullptr, 16);
         const quint8     nWords = static_cast<quint8>(ui->lineEdit_NWORDS->text().toUInt(nullptr, 10));
         const IPbusWord andTerm = ui->lineEdit_ANDTERM->text().toUInt(nullptr, 16);
@@ -40,9 +43,20 @@ MainWindow::MainWindow(QWidget *parent)
     //building packet after send button pushed
     connect(ui->pushButton_SEND, &QPushButton::clicked, this, &MainWindow::sendPacket);
     ui->lineEdit_NWORDS->setValidator(new QRegExpValidator(QRegExp("[1-9]|[1-9][0-9]|1[0-9]{1,2}|2[0-4][0-9]|25[0-5]")));
+    //validator for IP address
+    ui->lineEdit_IPADDRESS->setValidator(new QRegExpValidator(IP));
     //installation of eventFilter for delete button
     ui->treeWidget_PACKET_WIEVER->installEventFilter(this);
-    
+
+    //resize width of coloumns
+    ui->treeWidget_PACKET_WIEVER->header()->resizeSection(0, 390);
+    ui->treeWidget_RESPONSE->header()->resizeSection(0, 390);
+    ui->treeWidget_PACKET_WIEVER->header()->resizeSection(1, 40);
+    ui->treeWidget_RESPONSE->header()->resizeSection(1, 40);
+    ui->treeWidget_PACKET_WIEVER->header()->resizeSection(2, 40);
+    ui->treeWidget_RESPONSE->header()->resizeSection(2, 40);
+
+    ui->pushButton_SEND->setEnabled(false);
 }
 
 bool MainWindow::eventFilter(QObject * obj, QEvent* event){
@@ -167,7 +181,9 @@ void MainWindow::sendPacket(){
         parentTransaction->setFlags(Qt::ItemIsEnabled);
     }
     //After our packet was filled we send it to server
-    socket->writeDatagram(Crequest, requestViewer->packetSize() * sizeof (IPbusWord), QHostAddress::LocalHost, 50001);
+    if(ui->lineEdit_IPADDRESS->text().contains(IP))
+        socket->writeDatagram(Crequest, requestViewer->packetSize() * sizeof (IPbusWord), QHostAddress(ui->lineEdit_IPADDRESS->text()), 50001);
+    else ui->statusbar->showMessage("No such address");
     //and set this flag true, as we want to clear tree body when build new packet
     sendFlag = true;
     //it is possible to send this packet once more if it neccessary
@@ -178,7 +194,7 @@ void MainWindow::sendPacket(){
 
 void MainWindow::getResponse(){
     //when we have pending dataram
-    if(socket->hasPendingDatagrams()){
+    if(socket->hasPendingDatagrams() && socket->pendingDatagramSize() > sizeof (IPbusWord)){
         //we get response size, to get coressponding amount of bytes from the packet, which we got
         quint16 responseSize = static_cast<quint16>(socket->pendingDatagramSize());
         //getting that bytes in char array Cresponse
