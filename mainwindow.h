@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QProgressBar>
 #include "packetviewer.h"
 #include <QtNetwork/QUdpSocket>
 
@@ -33,6 +34,7 @@ private:
 private slots:
     void selectedTransactionChanged(const TransactionType type);
     void packetSizeChanged();
+    void changeProgressBar(QProgressBar* const bar, const quint16 value);
     void nWordsChanged();
     void sendPacket();
     void getResponse();

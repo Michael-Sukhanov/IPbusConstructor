@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>557</width>
-    <height>659</height>
+    <width>1038</width>
+    <height>844</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,44 +24,8 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="5" column="2">
-     <widget class="QLineEdit" name="lineEdit_ORTERM">
-      <property name="inputMask">
-       <string>&gt;HHHHHHHH</string>
-      </property>
-      <property name="text">
-       <string>00000000</string>
-      </property>
-     </widget>
-    </item>
-    <item row="11" column="3">
-     <widget class="QProgressBar" name="progressBar_WORDS">
-      <property name="maximum">
-       <number>368</number>
-      </property>
-      <property name="value">
-       <number>0</number>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="format">
-       <string notr="true">%v</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1">
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>Address:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="0">
-     <widget class="QRadioButton" name="radioButton_NIREAD">
+    <item row="5" column="0">
+     <widget class="QRadioButton" name="radioButton_NIWRITE">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -69,25 +33,11 @@
        </sizepolicy>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(153, 178, 221);
+       <string notr="true">background-color: rgb(117, 142, 79);
 color: rgb(0, 0, 0);</string>
       </property>
       <property name="text">
-       <string>NIRead</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="1">
-     <widget class="QLabel" name="label_ANDTERM">
-      <property name="text">
-       <string>AND term:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="10" column="0" colspan="3">
-     <widget class="QPushButton" name="pushButton_ADD">
-      <property name="text">
-       <string>Add</string>
+       <string>NIWrite</string>
       </property>
      </widget>
     </item>
@@ -111,15 +61,8 @@ color: rgb(0, 0, 0);</string>
       </property>
      </widget>
     </item>
-    <item row="3" column="1">
-     <widget class="QLabel" name="label_2">
-      <property name="text">
-       <string>nWords:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="0">
-     <widget class="QRadioButton" name="radioButton_NIWRITE">
+    <item row="4" column="0">
+     <widget class="QRadioButton" name="radioButton_NIREAD">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -127,23 +70,106 @@ color: rgb(0, 0, 0);</string>
        </sizepolicy>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(117, 142, 79);
+       <string notr="true">background-color: rgb(153, 178, 221);
 color: rgb(0, 0, 0);</string>
       </property>
       <property name="text">
-       <string>NIWrite</string>
+       <string>NIRead</string>
       </property>
      </widget>
     </item>
-    <item row="5" column="1">
-     <widget class="QLabel" name="label_4">
+    <item row="10" column="0" colspan="3">
+     <widget class="QPushButton" name="pushButton_ADD">
       <property name="text">
-       <string>OR term:</string>
+       <string>Add</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="2">
-     <widget class="QLineEdit" name="lineEdit_ADDRESS">
+    <item row="11" column="5">
+     <widget class="packetViewer" name="treeWidget_RESPONSE">
+      <property name="minimumSize">
+       <size>
+        <width>480</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>480</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="alternatingRowColors">
+       <bool>true</bool>
+      </property>
+      <property name="columnCount">
+       <number>3</number>
+      </property>
+      <column>
+       <property name="text">
+        <string>Packet content</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>#t</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>#w</string>
+       </property>
+      </column>
+     </widget>
+    </item>
+    <item row="8" column="0">
+     <widget class="QRadioButton" name="radioButton_RMWSUM">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(0, 0, 0);
+background-color: rgb(255, 177, 64);</string>
+      </property>
+      <property name="text">
+       <string>RMWsum</string>
+      </property>
+     </widget>
+    </item>
+    <item row="11" column="3">
+     <widget class="QProgressBar" name="progressBar_WORDS">
+      <property name="maximum">
+       <number>368</number>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="format">
+       <string notr="true">%v</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="1">
+     <widget class="QLabel" name="label_ANDTERM">
+      <property name="text">
+       <string>AND term:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="2">
+     <widget class="QLineEdit" name="lineEdit_ANDTERM">
       <property name="inputMask">
        <string>&gt;HHHHHHHH</string>
       </property>
@@ -152,29 +178,27 @@ color: rgb(0, 0, 0);</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="0">
-     <widget class="QRadioButton" name="radioButton_READ">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">
-background-color: rgb(141, 128, 173);
-color: rgb(0, 0, 0);</string>
-      </property>
+    <item row="2" column="1">
+     <widget class="QLabel" name="label">
       <property name="text">
-       <string>Read</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
+       <string>Address:</string>
       </property>
      </widget>
     </item>
     <item row="11" column="0" colspan="3">
      <widget class="packetViewer" name="treeWidget_PACKET_WIEVER">
+      <property name="minimumSize">
+       <size>
+        <width>480</width>
+        <height>300</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>480</width>
+        <height>16777215</height>
+       </size>
+      </property>
       <property name="tabKeyNavigation">
        <bool>true</bool>
       </property>
@@ -214,31 +238,24 @@ color: rgb(0, 0, 0);</string>
       <attribute name="headerMinimumSectionSize">
        <number>26</number>
       </attribute>
+      <attribute name="headerDefaultSectionSize">
+       <number>100</number>
+      </attribute>
       <column>
        <property name="text">
-        <string notr="true">1</string>
+        <string notr="true">Packet content</string>
        </property>
       </column>
       <column>
        <property name="text">
-        <string notr="true">2</string>
+        <string notr="true">#t</string>
        </property>
       </column>
       <column>
        <property name="text">
-        <string notr="true">3</string>
+        <string notr="true">#w</string>
        </property>
       </column>
-     </widget>
-    </item>
-    <item row="4" column="2">
-     <widget class="QLineEdit" name="lineEdit_ANDTERM">
-      <property name="inputMask">
-       <string>&gt;HHHHHHHH</string>
-      </property>
-      <property name="text">
-       <string>00000000</string>
-      </property>
      </widget>
     </item>
     <item row="9" column="0">
@@ -259,6 +276,30 @@ color: rgb(0, 0, 0);</string>
       </property>
      </widget>
     </item>
+    <item row="5" column="1">
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>OR term:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="1">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>nWords:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="2">
+     <widget class="QLineEdit" name="lineEdit_ORTERM">
+      <property name="inputMask">
+       <string>&gt;HHHHHHHH</string>
+      </property>
+      <property name="text">
+       <string>00000000</string>
+      </property>
+     </widget>
+    </item>
     <item row="3" column="2">
      <widget class="QLineEdit" name="lineEdit_NWORDS">
       <property name="text">
@@ -266,8 +307,8 @@ color: rgb(0, 0, 0);</string>
       </property>
      </widget>
     </item>
-    <item row="8" column="0">
-     <widget class="QRadioButton" name="radioButton_RMWSUM">
+    <item row="2" column="0">
+     <widget class="QRadioButton" name="radioButton_READ">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -275,11 +316,44 @@ color: rgb(0, 0, 0);</string>
        </sizepolicy>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgb(0, 0, 0);
-background-color: rgb(255, 177, 64);</string>
+       <string notr="true">
+background-color: rgb(141, 128, 173);
+color: rgb(0, 0, 0);</string>
       </property>
       <property name="text">
-       <string>RMWsum</string>
+       <string>Read</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
+     <widget class="QLineEdit" name="lineEdit_ADDRESS">
+      <property name="inputMask">
+       <string>&gt;HHHHHHHH</string>
+      </property>
+      <property name="text">
+       <string>00000000</string>
+      </property>
+     </widget>
+    </item>
+    <item row="11" column="4">
+     <widget class="QProgressBar" name="progressBar_WORDS_EXPECTED">
+      <property name="maximum">
+       <number>368</number>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="format">
+       <string notr="true">%v</string>
       </property>
      </widget>
     </item>
@@ -297,8 +371,8 @@ background-color: rgb(255, 177, 64);</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>557</width>
-     <height>24</height>
+     <width>1038</width>
+     <height>20</height>
     </rect>
    </property>
   </widget>
