@@ -45,6 +45,7 @@ private:
     const QColor* pallete;
 
     counter transactions, packetWords, expectedWords;
+    QString reservedForColoumn[2];
 
     QTreeWidgetItem* createNewTreeWidgetItem(QTreeWidgetItem* parent, QStringList* const list = new QStringList{"???", "???", "???"},
                                              const bool needToColor = false, QColor color = colors[6]);

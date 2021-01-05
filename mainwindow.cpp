@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     foreach (but, radioButtons)
         connect(but, &QRadioButton::clicked, this, [but, this](){selectedTransactionChanged(CoresspondingTypes[but->objectName().remove("radioButton_")]);});
     connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_PACKET_WIEVER, [=](){
-        //in case packet was sent recently we nwwd to clear both trees
+        //in case packet was sent recently we need to clear both trees
         if(sendFlag){
             ui->treeWidget_PACKET_WIEVER->clear();
             ui->treeWidget_RESPONSE->clear();
@@ -49,14 +49,17 @@ MainWindow::MainWindow(QWidget *parent)
     ui->treeWidget_PACKET_WIEVER->installEventFilter(this);
 
     //resize width of coloumns
-    ui->treeWidget_PACKET_WIEVER->header()->resizeSection(0, 390);
-    ui->treeWidget_RESPONSE->header()->resizeSection(0, 390);
+    ui->treeWidget_PACKET_WIEVER->header()->resizeSection(0, 380);
+    ui->treeWidget_RESPONSE->header()->resizeSection(0, 380);
     ui->treeWidget_PACKET_WIEVER->header()->resizeSection(1, 40);
     ui->treeWidget_RESPONSE->header()->resizeSection(1, 40);
     ui->treeWidget_PACKET_WIEVER->header()->resizeSection(2, 40);
     ui->treeWidget_RESPONSE->header()->resizeSection(2, 40);
 
     ui->pushButton_SEND->setEnabled(false);
+
+    ui->progressBar_WORDS->setFont(QFont("FranklinGothic", 12));
+    ui->progressBar_WORDS_EXPECTED->setFont(QFont("FranklinGothic", 12));
 }
 
 bool MainWindow::eventFilter(QObject * obj, QEvent* event){
@@ -69,6 +72,7 @@ bool MainWindow::eventFilter(QObject * obj, QEvent* event){
                         delete ui->treeWidget_PACKET_WIEVER->currentItem()->child(i);
                     delete ui->treeWidget_PACKET_WIEVER->currentItem();
                     ui->treeWidget_PACKET_WIEVER->reinit();
+                    nWordsChanged();
                     return true;
                 }else{
                     return false;
@@ -175,7 +179,7 @@ void MainWindow::sendPacket(){
         for(quint16 i = 0; i < parentTransaction->childCount(); ++i){
             request[numWord++] = parentTransaction->child(i)->text(0).toUInt(nullptr, 16);
             //and we need to set them uneditable after sending, as we want user to check what he wanted and what he got
-            parentTransaction->child(i)->setFlags(Qt::ItemIsEnabled);
+            parentTransaction->child(i)->setFlags(i == 0 ? Qt::NoItemFlags : Qt::ItemIsEnabled | Qt::ItemIsSelectable);
         }
         //and parent are not dragable anymore
         parentTransaction->setFlags(Qt::ItemIsEnabled);
@@ -194,7 +198,7 @@ void MainWindow::sendPacket(){
 
 void MainWindow::getResponse(){
     //when we have pending dataram
-    if(socket->hasPendingDatagrams() && socket->pendingDatagramSize() > sizeof (IPbusWord)){
+    if(socket->hasPendingDatagrams() && socket->pendingDatagramSize() > static_cast<qint64>(sizeof (IPbusWord))){
         //we get response size, to get coressponding amount of bytes from the packet, which we got
         quint16 responseSize = static_cast<quint16>(socket->pendingDatagramSize());
         //getting that bytes in char array Cresponse

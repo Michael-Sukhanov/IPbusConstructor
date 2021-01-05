@@ -7,9 +7,12 @@ packetViewer::packetViewer(QWidget* parent, const QColor* pallete):QTreeWidget(p
     this->pallete = pallete;
     this->setFont(QFont("Consolas", 10));
     connect(this, &packetViewer::itemChanged, this, [=](QTreeWidgetItem *item, int col){
-        Q_UNUSED(col)
-        if(item->parent())
+        if(item->parent() && !col)
             item->setText(0, hexFormatFor(item->text(0)));
+    });
+    connect(this, &packetViewer::itemDoubleClicked, this, [=](QTreeWidgetItem* item, int col){
+            if(!col && item->parent() && item->parent()->indexOfChild(item)) item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
+            else if(item->parent())item->setFlags(item->flags() == Qt::NoItemFlags ? Qt::NoItemFlags : Qt::ItemIsEnabled | Qt::ItemIsSelectable );
     });
 }
 
@@ -24,7 +27,7 @@ void packetViewer::addIPbusPacketHeader(){
     //This flag needed to show, that this item is not editable and drageble, but enabled for watching
     headerItem->setFlags(Qt::ItemIsEnabled);
     //Create child Item with content of header
-    createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(header), "0",QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsEnabled);
+    createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(header), "0",QString::number(this->packetWords++)}))->setFlags(Qt::NoItemFlags);
     ++expectedWords;
 }
 
@@ -35,9 +38,10 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
     //Creating transaction item
     QTreeWidgetItem* headerItem = createNewTreeWidgetItem(nullptr,
                                       new QStringList({QString::asprintf("[%u] ", transactions++) + header.typeIDString() + " transaction", "", QString::number(packetWords)}),/*counter transactions go forward*/
-                                      true, pallete[type]);                                                                                                                  /*as it counts amount of transactions*/
+                                      true, pallete[type]);
+    /*as it counts amount of transactions*/
     //Creating children items, which are common for all transactions
-    createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(header),  QString::number(internalTransactionWords++), QString::number(packetWords++)}))->setFlags(Qt::ItemIsEnabled);  /*counters packet words adn internal words go forward*/
+    createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(header),  QString::number(internalTransactionWords++), QString::number(packetWords++)}))->setFlags(Qt::NoItemFlags);  /*counters packet words adn internal words go forward*/
     createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(address), QString::number(internalTransactionWords++), QString::number(packetWords++)}))->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable); /*as here we fill transaction*/
     //response will have mandatory header, but won't have info about address, that's why increase by only one
     this->expectedWords++;
@@ -74,19 +78,21 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
 void packetViewer::displayResponse(IPbusWord * const response, const quint16 size){
     this->transactions = 0; this->packetWords = 0;
     QTreeWidgetItem* packetHeader = createNewTreeWidgetItem(nullptr, new QStringList({"Packet header", "", QString::number(this->packetWords)}), true, pallete[6]);
-    createNewTreeWidgetItem(packetHeader, new QStringList({hexFormatFor(response[this->packetWords]), "0", QString::number(this->packetWords++)}));
+    packetHeader->setFlags(Qt::ItemIsEnabled);
+    createNewTreeWidgetItem(packetHeader, new QStringList({hexFormatFor(response[this->packetWords]), "0", QString::number(this->packetWords++)}))->setFlags(Qt::NoItemFlags);
     while(this->packetWords < size){
         quint16 internalTransactionWords = 0;
         TransactionHeader header = TransactionHeader(response[this->packetWords]);
         QTreeWidgetItem* parent = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("[%u] ", this->transactions++) + header.typeIDString() + " transaction", "", QString::number(this->packetWords)}), true, pallete[header.TypeID]);
-        createNewTreeWidgetItem(parent, new QStringList({hexFormatFor(response[this->packetWords]), QString::number(internalTransactionWords++), QString::number(this->packetWords++)}));
+        parent->setFlags(Qt::ItemIsEnabled);
+        createNewTreeWidgetItem(parent, new QStringList({hexFormatFor(response[this->packetWords]), QString::number(internalTransactionWords++), QString::number(this->packetWords++)}))->setFlags(Qt::NoItemFlags);
         switch(header.TypeID){
         case nonIncrementingRead:
         case read: {for(quint16 i = 0; i < header.Words; ++i)
-                    createNewTreeWidgetItem(parent, new QStringList({hexFormatFor(response[this->packetWords]), QString::number(internalTransactionWords++), QString::number(this->packetWords++)}));
+                    createNewTreeWidgetItem(parent, new QStringList({hexFormatFor(response[this->packetWords]), QString::number(internalTransactionWords++), QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
                     break;}
         case RMWbits:
-        case RMWsum:{createNewTreeWidgetItem(parent, new QStringList({hexFormatFor(response[this->packetWords]), QString::number(internalTransactionWords++), QString::number(this->packetWords++)}));
+        case RMWsum:{createNewTreeWidgetItem(parent, new QStringList({hexFormatFor(response[this->packetWords]), QString::number(internalTransactionWords++), QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
                     break;}
         case write:
         case nonIncrementingWrite:
@@ -100,8 +106,8 @@ void packetViewer::displayResponse(IPbusWord * const response, const quint16 siz
 void packetViewer::reinit(){
     this->transactions = 0; this->packetWords = 1; this->expectedWords = 1;
     QList<QTreeWidgetItem*> transactions = this->findItems("transaction", Qt::MatchContains);
-    if(transactions.isEmpty()) return;
-    for(quint16 i = 0; i < transactions.size(); ++i)
+    if(!transactions.isEmpty())
+        for(quint16 i = 0; i < transactions.size(); ++i)
             changeTransactionPosition(transactions.at(i), this->transactions++, this->packetWords);
     emit wordsAmountChanged();
 }
@@ -179,7 +185,7 @@ void packetViewer::changeTransactionPosition(QTreeWidgetItem * const headerItem,
     TransactionHeader header = static_cast<quint32>(headerItem->child(0)->text(0).remove(0,2).toUInt(nullptr, 16));
     this->expectedWords++;
     //amount of expected words is changing too
-    switch(header.Words){
+    switch(header.TypeID){
     case nonIncrementingRead:
     case read:{this->expectedWords +=header.Words;
                break;}
