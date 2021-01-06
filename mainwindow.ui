@@ -131,7 +131,7 @@
             </property>
             <property name="styleSheet">
              <string notr="true">
-background-color: rgb(141, 128, 173);
+background-color: rgb(210, 206, 223);
 color: rgb(0, 0, 0);</string>
             </property>
             <property name="text">

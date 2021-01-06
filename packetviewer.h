@@ -8,13 +8,14 @@
 #include <QDrag>
 #include "IPbusHeaders.h"
 
-const QColor colors[] = {QColor("#8D80AD"), //read
+const QColor colors[] = {QColor("#D2CEDF"), //read
                          QColor("#519872"), //write
                          QColor("#99B2DD"), //nonIncrementingRead
                          QColor("#758E4F"), //nonIncrementingWrite
                          QColor("#F7F06D"), //RMWbits
                          QColor("#FFB140"), //RMWsum
-                         QColor("#980000")};//Packet Header
+                         QColor("#FF7070")};//Packet Header
+
 
 const quint16 maxWordsPerPacket = 368;
 
@@ -45,6 +46,7 @@ protected:
 private:
     //pallete to color the header items of the tree elements
     const QColor* pallete;
+    const QColor unediatble = QColor("#474747");
 
     //counters to count number of transactions, number of word and number of expected words in response
     counter transactions, packetWords, expectedWords;

@@ -96,6 +96,7 @@ void MainWindow::selectedTransactionChanged(const TransactionType type){
     ui->lineEdit_ORTERM ->setVisible (type == RMWbits);
     ui->lineEdit_ANDTERM->setVisible (type == RMWbits || type == RMWsum);
     ui->lineEdit_NWORDS ->setDisabled(type == RMWbits || type == RMWsum);
+    ui->lineEdit_NWORDS ->setText   ((type == RMWbits || type == RMWsum) ? "1": ui->lineEdit_NWORDS->text());
     ui->label_4         ->setText    (type == RMWbits ? "OR term:" : "");
     ui->label_ANDTERM   ->setText    (type == RMWsum  ? "ADDEND"   : (type == RMWbits ? "AND term:" : ""));
     //checking if packet is possible to send
@@ -151,19 +152,15 @@ void MainWindow::sendPacket(){
     //DInitialisation of requestViewer will let me write less code to apple QTreeWidget functions
     packetViewer* requestViewer = ui->treeWidget_PACKET_WIEVER;
     //First element in packet is Packet header/ It is getting from the first child of the first item in tree
-    request[numWord++] = requestViewer->topLevelItem(transactionCounter++)->child(0)->text(0).toUInt(nullptr, 16);
+    request[numWord++] = requestViewer->topLevelItem(transactionCounter++)->text(0).mid(2,8).toUInt(nullptr, 16);
     //while words amount in packet less than the building packet size
     while(numWord < requestViewer->packetSize()){
         //we will get top level items from tree, which correspond to every transaction
         QTreeWidgetItem* parentTransaction = requestViewer->topLevelItem(transactionCounter++);
+       request[numWord++] = parentTransaction->text(0).mid(5,8).toUInt(nullptr, 16);
         //the body (children) of every transaction will be placed in packet
-        for(quint16 i = 0; i < parentTransaction->childCount(); ++i){
+        for(quint16 i = 0; i < parentTransaction->childCount(); ++i)
             request[numWord++] = parentTransaction->child(i)->text(0).toUInt(nullptr, 16);
-            //and we need to set them uneditable after sending, as we want user to check what he wanted and what he got
-            parentTransaction->child(i)->setFlags(i == 0 ? Qt::NoItemFlags : Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-        }
-        //and parent are not dragable anymore
-        parentTransaction->setFlags(Qt::ItemIsEnabled);
     }
     //After our packet was filled we send it to server
     if(ui->lineEdit_IPADDRESS->text().contains(IP))

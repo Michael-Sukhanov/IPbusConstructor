@@ -11,7 +11,7 @@ packetViewer::packetViewer(QWidget* parent, const QColor* pallete):QTreeWidget(p
             item->setText(0, hexFormatFor(item->text(0)));
     });
     connect(this, &packetViewer::itemDoubleClicked, this, [=](QTreeWidgetItem* item, int col){
-            if(!col && item->parent() && item->parent()->indexOfChild(item)) item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
+            if(!col && item->parent()) item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
             else if(item->parent())item->setFlags(item->flags() == Qt::NoItemFlags ? Qt::NoItemFlags : Qt::ItemIsEnabled | Qt::ItemIsSelectable );
     });
 }
@@ -23,11 +23,9 @@ void packetViewer::addIPbusPacketHeader(){
     //Create IPbus Packet Header
     PacketHeader header = PacketHeader(control);
     //Create parent Item with header
-    QTreeWidgetItem* headerItem = createNewTreeWidgetItem(nullptr, new QStringList({"IPbus Packet Header", "", "0"}), true, pallete[6]);
+    QTreeWidgetItem* headerItem = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("0x%08X: Packet header", quint32(header)), "", QString::number(this->packetWords++)}), true, pallete[6]);
     //This flag needed to show, that this item is not editable and drageble, but enabled for watching
     headerItem->setFlags(Qt::ItemIsEnabled);
-    //Create child Item with content of header
-    createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(header), "0",QString::number(this->packetWords++)}))->setFlags(Qt::NoItemFlags);
     ++expectedWords;
 }
 
@@ -37,12 +35,13 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
     TransactionHeader header = TransactionHeader(type, nWords, transactions);
     //Creating transaction item
     QTreeWidgetItem* headerItem = createNewTreeWidgetItem(nullptr,
-                                      new QStringList({QString::asprintf("[%u] ", transactions++) + header.typeIDString() + " transaction", "", QString::number(packetWords)}),/*counter transactions go forward*/
-                                      true, pallete[type]);
-    /*as it counts amount of transactions*/
-    //Creating children items, which are common for all transactions
-    createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(header),  QString::number(internalTransactionWords++), QString::number(packetWords++)}))->setFlags(Qt::NoItemFlags);  /*counters packet words adn internal words go forward*/
-    createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(address), QString::number(internalTransactionWords++), QString::number(packetWords++)}))->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable); /*as here we fill transaction*/
+                                      new QStringList({QString::asprintf("[%u]0x%08X: %s %u word%s", transactions++, quint32(header),
+                                                       header.typeIDString().toUtf8().data(), header.Words, (header.Words % 10 == 1 ? "" : "s")), "", QString::number(packetWords++)}),/*counter transactions go forward*/
+                                      true, pallete[type]);                                                                                                                          /*as it counts amount of transactions*/
+    //Creating address item, common for all transactions                                                                                                  /*counters packet words and internal words go forward*/
+    QTreeWidgetItem* addressItem = createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(address), "addr", QString::number(packetWords++)})); /*as here we fill transaction*/
+    addressItem->setForeground(0, Qt::blue);
+    addressItem->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
     //response will have mandatory header, but won't have info about address, that's why increase by only one
     this->expectedWords++;
     //Orders what to do while different transactions
@@ -92,7 +91,7 @@ void packetViewer::displayResponse(IPbusWord * const response, const quint16 siz
                     createNewTreeWidgetItem(parent, new QStringList({hexFormatFor(response[this->packetWords]), QString::number(internalTransactionWords++), QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
                     break;}
         case RMWbits:
-        case RMWsum:{createNewTreeWidgetItem(parent, new QStringList({hexFormatFor(response[this->packetWords]), QString::number(internalTransactionWords++), QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+        case RMWsum:{if(header.Words) createNewTreeWidgetItem(parent, new QStringList({hexFormatFor(response[this->packetWords]), QString::number(internalTransactionWords++), QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
                     break;}
         case write:
         case nonIncrementingWrite:
@@ -107,7 +106,7 @@ void packetViewer::reinit(){
     this->transactions = 0;
     this->packetWords = this->topLevelItem(0) ? 1 : 0;
     this->expectedWords = this->topLevelItem(0) ? 1 : 0;
-    QList<QTreeWidgetItem*> transactions = this->findItems("transaction", Qt::MatchContains);
+    QList<QTreeWidgetItem*> transactions = this->findItems("[", Qt::MatchContains);
     if(!transactions.isEmpty())
         for(quint16 i = 0; i < transactions.size(); ++i)
             changeTransactionPosition(transactions.at(i), this->transactions++, this->packetWords);
@@ -145,6 +144,8 @@ QTreeWidgetItem *packetViewer::createNewTreeWidgetItem(QTreeWidgetItem *parent, 
     else       item = new QTreeWidgetItem(this);
     setText(item, list);
     if(needToColor) brushItem(item, color);
+    item->setForeground(1, this->unediatble);
+    item->setForeground(2, this->unediatble);
     return item;
 }
 
@@ -180,11 +181,11 @@ void packetViewer::setText(QTreeWidgetItem * const item, QStringList * const lis
 
 //changes indexes in transaction after reiniting NEED TO BE CHECKED здесь забыто о сузествовании заголовка как такогого внутри итема
 void packetViewer::changeTransactionPosition(QTreeWidgetItem * const headerItem, const counter transactionNo, counter &packetWordNo){
-    quint16 internalCounter = 0;
     QString previoustext = headerItem->text(0);
     //Change header item text
-    setText(headerItem, new QStringList({previoustext.replace(QRegExp("([0-9]{1,2}|1[0-7][0-9]|18[012])"), QString::asprintf("%u", transactionNo)), "", QString::number(packetWordNo)}));
-    TransactionHeader header = static_cast<quint32>(headerItem->child(0)->text(0).remove(0,2).toUInt(nullptr, 16));
+    TransactionHeader header = static_cast<quint32>(headerItem->text(0).mid(5,8).toUInt(nullptr, 16));
+    setText(headerItem, new QStringList({QString::asprintf("[%u]0x%08X: %s %u word%s", transactionNo, quint32(header),
+                                         header.typeIDString().toUtf8().data(), header.Words, (header.Words % 10 == 1 ? "" : "s")), "", QString::number(packetWordNo++)}));
     this->expectedWords++;
     //amount of expected words is changing too
     switch(header.TypeID){
@@ -198,9 +199,7 @@ void packetViewer::changeTransactionPosition(QTreeWidgetItem * const headerItem,
     case nonIncrementingWrite:
     default: break;
     }
-    header.TransactionID = transactionNo;
-    setText(headerItem->child(0), new QStringList({hexFormatFor(header), QString::number(internalCounter++), QString::number(packetWordNo++)}));
-    for(quint16 i = 1; i < headerItem->childCount(); ++i)
-        setText(headerItem->child(i),new QStringList({headerItem->child(i)->text(0), QString::number(internalCounter++), QString::number(packetWordNo++)}));
+    for(quint16 i = 0; i < headerItem->childCount(); ++i)
+        setText(headerItem->child(i),new QStringList({headerItem->child(i)->text(0), headerItem->child(i)->text(1), QString::number(packetWordNo++)}));
 
 }
