@@ -34,6 +34,7 @@ public:
     const QColor* getPallete(){return this->pallete;}
     counter packetSize(){return this->packetWords;}
     counter expextedResponseSize(){return this->expectedWords;}
+    counter transactionsAmount(){return this->transactions;}
 
 signals:
     void wordsAmountChanged();
@@ -42,10 +43,11 @@ protected:
     void dropEvent(QDropEvent*);
     
 private:
+    //pallete to color the header items of the tree elements
     const QColor* pallete;
 
+    //counters to count number of transactions, number of word and number of expected words in response
     counter transactions, packetWords, expectedWords;
-    QString reservedForColoumn[2];
 
     QTreeWidgetItem* createNewTreeWidgetItem(QTreeWidgetItem* parent, QStringList* const list = new QStringList{"???", "???", "???"},
                                              const bool needToColor = false, QColor color = colors[6]);

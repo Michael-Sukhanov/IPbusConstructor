@@ -104,7 +104,9 @@ void packetViewer::displayResponse(IPbusWord * const response, const quint16 siz
 
 //reinit tree widget - make the numeration correct
 void packetViewer::reinit(){
-    this->transactions = 0; this->packetWords = 1; this->expectedWords = 1;
+    this->transactions = 0;
+    this->packetWords = this->topLevelItem(0) ? 1 : 0;
+    this->expectedWords = this->topLevelItem(0) ? 1 : 0;
     QList<QTreeWidgetItem*> transactions = this->findItems("transaction", Qt::MatchContains);
     if(!transactions.isEmpty())
         for(quint16 i = 0; i < transactions.size(); ++i)

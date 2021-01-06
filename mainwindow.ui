@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1060</width>
-    <height>1238</height>
+    <height>880</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -401,13 +401,13 @@ color: rgb(0, 0, 0);</string>
              </font>
             </property>
             <property name="inputMask">
-             <string>&gt;HHHH</string>
+             <string>&gt;HHHHHHHH</string>
             </property>
             <property name="text">
-             <string>0000</string>
+             <string>00000000</string>
             </property>
             <property name="maxLength">
-             <number>4</number>
+             <number>8</number>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -781,8 +781,14 @@ color: rgb(0, 0, 0);</string>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
+      <property name="textVisible">
+       <bool>true</bool>
+      </property>
       <property name="orientation">
        <enum>Qt::Vertical</enum>
+      </property>
+      <property name="invertedAppearance">
+       <bool>false</bool>
       </property>
       <property name="format">
        <string notr="true">%v</string>
@@ -911,6 +917,13 @@ color: rgb(0, 0, 0);</string>
      <widget class="QPushButton" name="pushButton_SEND">
       <property name="text">
        <string>Send</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QPushButton" name="pushButton_CLEAR">
+      <property name="text">
+       <string>Clear outputs</string>
       </property>
      </widget>
     </item>

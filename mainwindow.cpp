@@ -20,11 +20,6 @@ MainWindow::MainWindow(QWidget *parent)
         connect(but, &QRadioButton::clicked, this, [but, this](){selectedTransactionChanged(CoresspondingTypes[but->objectName().remove("radioButton_")]);});
     connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_PACKET_WIEVER, [=](){
         //in case packet was sent recently we need to clear both trees
-        if(sendFlag){
-            ui->treeWidget_PACKET_WIEVER->clear();
-            ui->treeWidget_RESPONSE->clear();
-            sendFlag = false;
-            ui->pushButton_SEND->setText("Send");}
         if(!ui->treeWidget_PACKET_WIEVER->topLevelItem(0)){
             ui->pushButton_SEND->setEnabled(true);
             ui->treeWidget_PACKET_WIEVER->addIPbusPacketHeader();}
@@ -42,13 +37,16 @@ MainWindow::MainWindow(QWidget *parent)
     connect(socket, &QUdpSocket::readyRead, this, &MainWindow::getResponse);
     //building packet after send button pushed
     connect(ui->pushButton_SEND, &QPushButton::clicked, this, &MainWindow::sendPacket);
+    //clear outputs
+    connect(ui->pushButton_CLEAR, &QPushButton::clicked, this, &MainWindow::clear);
+
     ui->lineEdit_NWORDS->setValidator(new QRegExpValidator(QRegExp("[1-9]|[1-9][0-9]|1[0-9]{1,2}|2[0-4][0-9]|25[0-5]")));
     //validator for IP address
     ui->lineEdit_IPADDRESS->setValidator(new QRegExpValidator(IP));
     //installation of eventFilter for delete button
     ui->treeWidget_PACKET_WIEVER->installEventFilter(this);
 
-    //resize width of coloumns
+    //resize width of coloumns in appropriate form in the beginning of the program
     ui->treeWidget_PACKET_WIEVER->header()->resizeSection(0, 380);
     ui->treeWidget_RESPONSE->header()->resizeSection(0, 380);
     ui->treeWidget_PACKET_WIEVER->header()->resizeSection(1, 40);
@@ -56,10 +54,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->treeWidget_PACKET_WIEVER->header()->resizeSection(2, 40);
     ui->treeWidget_RESPONSE->header()->resizeSection(2, 40);
 
+    //as th window is empty -> nothing to send
     ui->pushButton_SEND->setEnabled(false);
 
+    //setting font for bars -- kostyl
     ui->progressBar_WORDS->setFont(QFont("FranklinGothic", 12));
     ui->progressBar_WORDS_EXPECTED->setFont(QFont("FranklinGothic", 12));
+
+    //setting OR term nd AND term unabled, as in the start of program read transaction - default
+    ui->lineEdit_ORTERM->setEnabled(false);
+    ui->lineEdit_ANDTERM->setEnabled(false);
 }
 
 bool MainWindow::eventFilter(QObject * obj, QEvent* event){
@@ -70,6 +74,10 @@ bool MainWindow::eventFilter(QObject * obj, QEvent* event){
                 if(ui->treeWidget_PACKET_WIEVER->itemAbove(ui->treeWidget_PACKET_WIEVER->currentItem()) && !ui->treeWidget_PACKET_WIEVER->currentItem()->parent()){
                     for(quint16 i = 0; i < ui->treeWidget_PACKET_WIEVER->currentItem()->childCount(); ++i)
                         delete ui->treeWidget_PACKET_WIEVER->currentItem()->child(i);
+                    if(ui->treeWidget_PACKET_WIEVER->transactionsAmount() == 1){
+                        delete ui->treeWidget_PACKET_WIEVER->topLevelItem(0);
+                        ui->pushButton_SEND->setEnabled(false);
+                    }
                     delete ui->treeWidget_PACKET_WIEVER->currentItem();
                     ui->treeWidget_PACKET_WIEVER->reinit();
                     nWordsChanged();
@@ -165,6 +173,7 @@ void MainWindow::nWordsChanged(){
 }
 
 void MainWindow::sendPacket(){
+    ui->treeWidget_RESPONSE->clear();
     //Declaration of the variables numWord - counter of words in packet, transactionCounter - counter of transactions in the packet
     quint16 numWord = 0, transactionCounter = 0;
     //DInitialisation of requestViewer will let me write less code to apple QTreeWidget functions
@@ -188,17 +197,13 @@ void MainWindow::sendPacket(){
     if(ui->lineEdit_IPADDRESS->text().contains(IP))
         socket->writeDatagram(Crequest, requestViewer->packetSize() * sizeof (IPbusWord), QHostAddress(ui->lineEdit_IPADDRESS->text()), 50001);
     else ui->statusbar->showMessage("No such address");
-    //and set this flag true, as we want to clear tree body when build new packet
-    sendFlag = true;
-    //it is possible to send this packet once more if it neccessary
-    ui->pushButton_SEND->setText("Send once more");
-    //it s neccessary to set ADD button enabled? ad it can be not after send button were pressed, as the restrictions worked
-    ui->pushButton_ADD->setEnabled(true);
+    ui->treeWidget_PACKET_WIEVER->reinit();
+    nWordsChanged();
 }
 
 void MainWindow::getResponse(){
     //when we have pending dataram
-    if(socket->hasPendingDatagrams() && socket->pendingDatagramSize() > static_cast<qint64>(sizeof (IPbusWord))){
+    if(socket->hasPendingDatagrams()){
         //we get response size, to get coressponding amount of bytes from the packet, which we got
         quint16 responseSize = static_cast<quint16>(socket->pendingDatagramSize());
         //getting that bytes in char array Cresponse
@@ -208,5 +213,13 @@ void MainWindow::getResponse(){
         //call function, which will display response to user
         ui->treeWidget_RESPONSE->displayResponse(response, responseSize / sizeof (IPbusWord));
     }
+}
+
+void MainWindow::clear(){
+    ui->treeWidget_PACKET_WIEVER->clear();
+    ui->treeWidget_RESPONSE->clear();
+    ui->treeWidget_PACKET_WIEVER->reinit();
+    nWordsChanged();
+    ui->pushButton_SEND->setEnabled(false);
 }
 

@@ -40,5 +40,6 @@ private slots:
     void nWordsChanged();
     void sendPacket();
     void getResponse();
+    void clear();
 };
 #endif // MAINWINDOW_H
