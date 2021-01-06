@@ -60,10 +60,6 @@ MainWindow::MainWindow(QWidget *parent)
     //setting font for bars -- kostyl
     ui->progressBar_WORDS->setFont(QFont("FranklinGothic", 12));
     ui->progressBar_WORDS_EXPECTED->setFont(QFont("FranklinGothic", 12));
-
-    //setting OR term nd AND term unabled, as in the start of program read transaction - default
-    ui->lineEdit_ORTERM->setEnabled(false);
-    ui->lineEdit_ANDTERM->setEnabled(false);
 }
 
 bool MainWindow::eventFilter(QObject * obj, QEvent* event){
@@ -97,35 +93,11 @@ MainWindow::~MainWindow(){
 
 void MainWindow::selectedTransactionChanged(const TransactionType type){
     currentType = type;
-    switch (type) {
-    case write:
-    case read:
-    case nonIncrementingRead:
-    case nonIncrementingWrite:{
-        ui->lineEdit_ORTERM->setEnabled(false);
-        ui->lineEdit_ANDTERM->setEnabled(false);
-        ui->lineEdit_NWORDS->setEnabled(true);
-        break;
-    }
-    case RMWsum:{
-        ui->lineEdit_ANDTERM->setEnabled(true);
-        ui->lineEdit_ORTERM->setEnabled(false);
-        ui->lineEdit_NWORDS->setText("1");
-        ui->lineEdit_NWORDS->setEnabled(false);
-        ui->label_ANDTERM->setText("ADDEND");
-        break;
-    }
-    case RMWbits:{
-        ui->lineEdit_ANDTERM->setEnabled(true);
-        ui->lineEdit_ORTERM->setEnabled(true);
-        ui->lineEdit_NWORDS->setText("1");
-        ui->lineEdit_NWORDS->setEnabled(false);
-        ui->label_ANDTERM->setText("AND term");
-        break;
-    }
-    default:
-        break;
-    }
+    ui->lineEdit_ORTERM ->setVisible (type == RMWbits);
+    ui->lineEdit_ANDTERM->setVisible (type == RMWbits || type == RMWsum);
+    ui->lineEdit_NWORDS ->setDisabled(type == RMWbits || type == RMWsum);
+    ui->label_4         ->setText    (type == RMWbits ? "OR term:" : "");
+    ui->label_ANDTERM   ->setText    (type == RMWsum  ? "ADDEND"   : (type == RMWbits ? "AND term:" : ""));
     //checking if packet is possible to send
     nWordsChanged();
 }
