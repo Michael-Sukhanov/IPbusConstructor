@@ -94,6 +94,7 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
 }
 
 void packetViewer::displayResponse(IPbusWord * const response, const quint16 size){
+    this->display = true;
     this->transactions = 0; this->packetWords = 0;
     QTreeWidgetItem* packetHeader = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("   0x%08X: Packet header", response[0]), "", QString::number(this->packetWords++)}), true, pallete[6]);
     packetHeader->setFlags(Qt::ItemIsEnabled);
@@ -254,20 +255,22 @@ void packetViewer::copyWholePacket(){
 
 void packetViewer::preapreMenu(const QPoint &pos){
     auto item = this->itemAt(pos);
-    if(item && item->text(0).contains('[')){
-        QAction *copyDataAction = new QAction(tr("&Copy Data"), this);
-        copyDataAction->setStatusTip(tr("Copy data from the packet to the buffer"));
-        connect(copyDataAction, &QAction::triggered, [this, item](){
-            QString message;
-            for(quint16 i = item->child(0)->text(1).contains("addr"); i < item->childCount(); ++i)
-                message.append(item->child(i)->text(0) + '\n');
-            this->clipboard->setText(message);
-        });
+    if(!item || !item->text(0).contains('[')) return;
+    if(this->display && (item->text(0).contains("Writ"))) return;
+    if(!this->display && (item->text(0).contains("Rea"))) return;
 
-        QMenu menu(this);
-        menu.addAction(copyDataAction);
-        menu.exec(this->mapToGlobal(pos));
-    }
+    QAction *copyDataAction = new QAction(tr("&Copy Data"), this);
+    copyDataAction->setStatusTip(tr("Copy data from the packet to the buffer"));
+    connect(copyDataAction, &QAction::triggered, [this, item](){
+        QString message;
+        for(quint16 i = item->child(0)->text(1).contains("addr"); i < item->childCount(); ++i)
+            message.append(item->child(i)->text(0) + '\n');
+        this->clipboard->setText(message);
+    });
+
+    QMenu menu(this);
+    menu.addAction(copyDataAction);
+    menu.exec(this->mapToGlobal(pos));
 
 }
 

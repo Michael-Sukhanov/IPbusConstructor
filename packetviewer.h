@@ -48,6 +48,7 @@ protected:
     void dropEvent(QDropEvent*);
     
 private:
+    bool display = false;
     //pallete to color the header items of the tree elements
     const QColor* pallete;
     const QColor unediatble = QColor("#474747");

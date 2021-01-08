@@ -62,6 +62,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->progressBar_WORDS->setFont(QFont("FranklinGothic", 12));
     ui->progressBar_WORDS_EXPECTED->setFont(QFont("FranklinGothic", 12));
 
+    //hiding in initialisation
+    ui->lineEdit_ANDTERM->hide();
+    ui->lineEdit_ORTERM->hide();
+    ui->label_4->setText("");
+    ui->label_ANDTERM->setText("");
+
 
 }
 
