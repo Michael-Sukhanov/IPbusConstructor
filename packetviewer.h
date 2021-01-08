@@ -6,17 +6,19 @@
 #include <QTreeWidget>
 #include <QtGui>
 #include <QDrag>
+#include <QAction>
+#include <QMenu>
 #include <QApplication>
 #include <QShortcut>
 #include "IPbusHeaders.h"
 
-const QColor colors[] = {QColor("#D2CEDF"), //read
-                         QColor("#519872"), //write
-                         QColor("#99B2DD"), //nonIncrementingRead
-                         QColor("#758E4F"), //nonIncrementingWrite
-                         QColor("#F7F06D"), //RMWbits
-                         QColor("#FFB140"), //RMWsum
-                         QColor("#FF7070")};//Packet Header
+const QColor colors[] = {QColor("#DDDAE7"), //read
+                         QColor("#CAE2D5"), //write
+                         QColor("#D7ECFE"), //nonIncrementingRead
+                         QColor("#CFDBBD"), //nonIncrementingWrite
+                         QColor("#FDFBD8"), //RMWbits
+                         QColor("#FFEED6"), //RMWsum
+                         QColor("#FFADAD")};//Packet Header
 
 
 const quint16 maxWordsPerPacket = 368;
@@ -70,8 +72,9 @@ private:
 //    void setFlagsAllParents(Qt::ItemFlags flags = Qt::ItemIsEnabled, QTreeWidgetItem* item = nullptr);
 //    void setFlagsAllChildren(Qt::ItemFlags flags = Qt::ItemIsEnabled);
 //    void restoreAllItemsFlags();
-    QList<QTreeWidgetItem*> itemFilter(QList<QTreeWidgetItem*> Itemlist);
+    QList<QTreeWidgetItem*> itemsSort(const QList<QTreeWidgetItem*> Itemlist);
     void copyWholePacket();
+    void preapreMenu(const QPoint& pos);
 
 
 

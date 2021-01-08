@@ -6,27 +6,33 @@ packetViewer::packetViewer(QWidget* parent, const QColor* pallete):QTreeWidget(p
     this->setDragEnabled(true);
     this->pallete = pallete;
     this->setFont(QFont("Consolas", 10));
+    //to work with ontext menu
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
+    //validate text changes in item
     connect(this, &packetViewer::itemChanged, this, [=](QTreeWidgetItem *item, int col){
         if(item->parent() && !col)
             item->setText(0, hexFormatFor(item->text(0)));
     });
+    //allow edit word in coloumn 0 but not 1 and 2
     connect(this, &packetViewer::itemDoubleClicked, this, [=](QTreeWidgetItem* item, int col){
             if(!col && item->parent()) item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
             else if(item->parent())item->setFlags(item->flags() == Qt::NoItemFlags ? Qt::NoItemFlags : Qt::ItemIsEnabled | Qt::ItemIsSelectable );
     });
+    //copying event handler
     connect(copyShortcut, &QShortcut::activated, [this](){
-       QList<QTreeWidgetItem*> selectedItems = itemFilter(this->selectedItems());
+       QList<QTreeWidgetItem*> selectedItems = itemsSort(this->selectedItems());
        if(selectedItems.size() > 0){
            QString buffer;
            for(quint16 i = 0; i < selectedItems.size(); ++i){
                auto item = selectedItems.at(i);
-               buffer.append((item->parent() ? item->text(0) : item->text(0).mid(3, 10)) +'\n');
+               buffer.append(item->text(0) +'\n');
            }
            clipboard->setText(buffer);
        }else{
            copyWholePacket();
        }
     });
+    connect(this, &QTreeWidget::customContextMenuRequested, this, &packetViewer::preapreMenu);
 }
 
 //add IPbus Header Item in tree
@@ -36,7 +42,7 @@ void packetViewer::addIPbusPacketHeader(){
     //Create IPbus Packet Header
     PacketHeader header = PacketHeader(control);
     //Create parent Item with header
-    QTreeWidgetItem* headerItem = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("0x%08X: Packet header", quint32(header)), "", QString::number(this->packetWords++)}), true, pallete[6]);
+    QTreeWidgetItem* headerItem = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("   0x%08X: Packet header", quint32(header)), "", QString::number(this->packetWords++)}), true, pallete[6]);
     //This flag needed to show, that this item is not editable and drageble, but enabled for watching
     headerItem->setFlags(Qt::ItemIsEnabled);
     ++expectedWords;
@@ -66,15 +72,15 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
                                                                             QString::number(packetWords++)}))->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
                     break;}
         case RMWsum: { createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(ANDterm),
-                                                                            "+",
+                                                                            "ADD",
                                                                             QString::number(packetWords++)}))->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
                     this->expectedWords++;
                     break;}
         case RMWbits:{ createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(ANDterm),
-                                                                            "&",
+                                                                            "AND",
                                                                             QString::number(packetWords++)}))->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
                        createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(ORterm),
-                                                                            "|",
+                                                                            "OR",
                                                                             QString::number(packetWords++)}))->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
                     this->expectedWords++;
                     break;}
@@ -89,7 +95,7 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
 
 void packetViewer::displayResponse(IPbusWord * const response, const quint16 size){
     this->transactions = 0; this->packetWords = 0;
-    QTreeWidgetItem* packetHeader = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("0x%08X: Packet header", response[0]), "", QString::number(this->packetWords++)}), true, pallete[6]);
+    QTreeWidgetItem* packetHeader = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("   0x%08X: Packet header", response[0]), "", QString::number(this->packetWords++)}), true, pallete[6]);
     packetHeader->setFlags(Qt::ItemIsEnabled);
     while(this->packetWords < size){
         quint16 internalTransactionWords = 0;
@@ -217,25 +223,26 @@ void packetViewer::changeTransactionPosition(QTreeWidgetItem * const headerItem,
 
 }
 
-QList<QTreeWidgetItem *> packetViewer::itemFilter(QList<QTreeWidgetItem *> Itemlist){
+QList<QTreeWidgetItem *> packetViewer::itemsSort(const QList<QTreeWidgetItem *> Itemlist){
     if(!Itemlist.size()) return Itemlist;
     QList<QTreeWidgetItem *> sortedList;
-    if(!Itemlist.at(0)->parent())
-        for(quint16 i = 0; i < Itemlist.at(0)->childCount(); ++i)
-            sortedList.append(Itemlist.at(0)->child(i));
-    if(Itemlist.at(0)->parent()){
-        for(quint16 i = 0; i < Itemlist.size(); ++i)
-            if(Itemlist.at(i)->parent() != Itemlist.at(0)->parent()) Itemlist.removeAt(i);
-        for(quint16 i = 0; i < Itemlist.at(0)->parent()->childCount(); ++i)
-            if(Itemlist.contains(Itemlist.at(0)->parent()->child(i)))
-                sortedList.append(Itemlist.at(0)->parent()->child(i));}
+    quint16 itemIndex = 1;
+    while(this->topLevelItem(itemIndex)){
+        if(Itemlist.contains(this->topLevelItem(itemIndex))) sortedList.append(topLevelItem(itemIndex));
+        for(quint16 i = 0; i < this->topLevelItem(itemIndex)->childCount(); ++i){
+            if(Itemlist.contains(this->topLevelItem(itemIndex)->child(i)))
+                sortedList.append(this->topLevelItem(itemIndex)->child(i));
+        }
+        itemIndex++;
+    }
     return sortedList;
 }
 
+//function which set all selected packet in window to clipboard
 void packetViewer::copyWholePacket(){
     quint16 itemIndex = 0;
     QString message;
-    message.append(this->topLevelItem(itemIndex++)->text(0).left(10) + '\n');
+    message.append(this->topLevelItem(itemIndex++)->text(0).mid(3,10) + '\n');
     while (this->topLevelItem(itemIndex)) {
         message.append(this->topLevelItem(itemIndex)->text(0).mid(3,10) + '\n');
         for(quint16 i = 0; i < this->topLevelItem(itemIndex)->childCount(); ++i)
@@ -244,6 +251,26 @@ void packetViewer::copyWholePacket(){
     }
     clipboard->setText(message);
 }
+
+void packetViewer::preapreMenu(const QPoint &pos){
+    auto item = this->itemAt(pos);
+    if(item && item->text(0).contains('[')){
+        QAction *copyDataAction = new QAction(tr("&Copy Data"), this);
+        copyDataAction->setStatusTip(tr("Copy data from the packet to the buffer"));
+        connect(copyDataAction, &QAction::triggered, [this, item](){
+            QString message;
+            for(quint16 i = item->child(0)->text(1).contains("addr"); i < item->childCount(); ++i)
+                message.append(item->child(i)->text(0) + '\n');
+            this->clipboard->setText(message);
+        });
+
+        QMenu menu(this);
+        menu.addAction(copyDataAction);
+        menu.exec(this->mapToGlobal(pos));
+    }
+
+}
+
 
 //void packetViewer::setFlagsAllParents(Qt::ItemFlags flags, QTreeWidgetItem* item){
 //    quint16 itemIndex = 1;

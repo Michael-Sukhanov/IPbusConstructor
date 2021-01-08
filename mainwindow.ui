@@ -130,8 +130,7 @@
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">
-background-color: rgb(210, 206, 223);
+             <string notr="true">background-color: rgb(221, 218, 231);
 color: rgb(0, 0, 0);</string>
             </property>
             <property name="text">
@@ -172,7 +171,7 @@ color: rgb(0, 0, 0);</string>
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">background-color: rgb(81, 152, 114);
+             <string notr="true">background-color: rgb(202, 226, 213);
 color: rgb(0, 0, 0);</string>
             </property>
             <property name="text">
@@ -213,7 +212,7 @@ color: rgb(0, 0, 0);</string>
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">background-color: rgb(153, 178, 221);
+             <string notr="true">background-color: rgb(215, 236, 254);
 color: rgb(0, 0, 0);</string>
             </property>
             <property name="text">
@@ -251,7 +250,7 @@ color: rgb(0, 0, 0);</string>
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">background-color: rgb(117, 142, 79);
+             <string notr="true">background-color: rgb(207, 219, 189);
 color: rgb(0, 0, 0);</string>
             </property>
             <property name="text">
@@ -290,7 +289,8 @@ color: rgb(0, 0, 0);</string>
             </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(0, 0, 0);
-background-color: rgb(255, 177, 64);</string>
+background-color: rgb(255, 238, 214);
+</string>
             </property>
             <property name="text">
              <string>RMWsum</string>
@@ -327,8 +327,7 @@ background-color: rgb(255, 177, 64);</string>
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">background-color: rgb(247, 240, 109);
-
+             <string notr="true">background-color: rgb(253, 251, 216);
 color: rgb(0, 0, 0);</string>
             </property>
             <property name="text">
@@ -348,7 +347,7 @@ color: rgb(0, 0, 0);</string>
           </font>
          </property>
          <property name="text">
-          <string>in your packet</string>
+          <string>to your packet</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -926,7 +925,7 @@ color: rgb(0, 0, 0);</string>
     <item row="3" column="0">
      <widget class="QPushButton" name="pushButton_CLEAR">
       <property name="text">
-       <string>Clear outputs</string>
+       <string>Clear request</string>
       </property>
      </widget>
     </item>
