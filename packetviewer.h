@@ -6,6 +6,8 @@
 #include <QTreeWidget>
 #include <QtGui>
 #include <QDrag>
+#include <QApplication>
+#include <QShortcut>
 #include "IPbusHeaders.h"
 
 const QColor colors[] = {QColor("#D2CEDF"), //read
@@ -48,8 +50,12 @@ private:
     const QColor* pallete;
     const QColor unediatble = QColor("#474747");
 
+    QClipboard *clipboard = QApplication::clipboard();
+
     //counters to count number of transactions, number of word and number of expected words in response
     counter transactions, packetWords, expectedWords;
+
+    QShortcut* copyShortcut = new QShortcut(QKeySequence("Ctrl+C"), this, nullptr, nullptr, Qt::WidgetShortcut);
 
     QTreeWidgetItem* createNewTreeWidgetItem(QTreeWidgetItem* parent, QStringList* const list = new QStringList{"???", "???", "???"},
                                              const bool needToColor = false, QColor color = colors[6]);
@@ -60,6 +66,12 @@ private:
     void brushItem(QTreeWidgetItem* const, const QColor);
     void setText(QTreeWidgetItem* const, QStringList* const);
     void changeTransactionPosition(QTreeWidgetItem* const, const counter transactionNo, counter& packetWordNo);
+
+//    void setFlagsAllParents(Qt::ItemFlags flags = Qt::ItemIsEnabled, QTreeWidgetItem* item = nullptr);
+//    void setFlagsAllChildren(Qt::ItemFlags flags = Qt::ItemIsEnabled);
+//    void restoreAllItemsFlags();
+    QList<QTreeWidgetItem*> itemFilter(QList<QTreeWidgetItem*> Itemlist);
+    void copyWholePacket();
 
 
 

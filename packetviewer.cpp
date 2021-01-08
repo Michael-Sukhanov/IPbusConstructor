@@ -14,6 +14,19 @@ packetViewer::packetViewer(QWidget* parent, const QColor* pallete):QTreeWidget(p
             if(!col && item->parent()) item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
             else if(item->parent())item->setFlags(item->flags() == Qt::NoItemFlags ? Qt::NoItemFlags : Qt::ItemIsEnabled | Qt::ItemIsSelectable );
     });
+    connect(copyShortcut, &QShortcut::activated, [this](){
+       QList<QTreeWidgetItem*> selectedItems = itemFilter(this->selectedItems());
+       if(selectedItems.size() > 0){
+           QString buffer;
+           for(quint16 i = 0; i < selectedItems.size(); ++i){
+               auto item = selectedItems.at(i);
+               buffer.append((item->parent() ? item->text(0) : item->text(0).mid(3, 10)) +'\n');
+           }
+           clipboard->setText(buffer);
+       }else{
+           copyWholePacket();
+       }
+    });
 }
 
 //add IPbus Header Item in tree
@@ -203,3 +216,61 @@ void packetViewer::changeTransactionPosition(QTreeWidgetItem * const headerItem,
         setText(headerItem->child(i),new QStringList({headerItem->child(i)->text(0), headerItem->child(i)->text(1), QString::number(packetWordNo++)}));
 
 }
+
+QList<QTreeWidgetItem *> packetViewer::itemFilter(QList<QTreeWidgetItem *> Itemlist){
+    if(!Itemlist.size()) return Itemlist;
+    QList<QTreeWidgetItem *> sortedList;
+    if(!Itemlist.at(0)->parent())
+        for(quint16 i = 0; i < Itemlist.at(0)->childCount(); ++i)
+            sortedList.append(Itemlist.at(0)->child(i));
+    if(Itemlist.at(0)->parent()){
+        for(quint16 i = 0; i < Itemlist.size(); ++i)
+            if(Itemlist.at(i)->parent() != Itemlist.at(0)->parent()) Itemlist.removeAt(i);
+        for(quint16 i = 0; i < Itemlist.at(0)->parent()->childCount(); ++i)
+            if(Itemlist.contains(Itemlist.at(0)->parent()->child(i)))
+                sortedList.append(Itemlist.at(0)->parent()->child(i));}
+    return sortedList;
+}
+
+void packetViewer::copyWholePacket(){
+    quint16 itemIndex = 0;
+    QString message;
+    message.append(this->topLevelItem(itemIndex++)->text(0).left(10) + '\n');
+    while (this->topLevelItem(itemIndex)) {
+        message.append(this->topLevelItem(itemIndex)->text(0).mid(3,10) + '\n');
+        for(quint16 i = 0; i < this->topLevelItem(itemIndex)->childCount(); ++i)
+            message.append(this->topLevelItem(itemIndex)->child(i)->text(0) + '\n');
+        itemIndex++;
+    }
+    clipboard->setText(message);
+}
+
+//void packetViewer::setFlagsAllParents(Qt::ItemFlags flags, QTreeWidgetItem* item){
+//    quint16 itemIndex = 1;
+//    while(this->topLevelItem(itemIndex)){
+//        this->topLevelItem(itemIndex)->setFlags(flags);
+//        if(this->topLevelItem(itemIndex) != item)
+//            for(quint16 i = 0; i < this->topLevelItem(itemIndex)->childCount(); ++i)
+//                this->topLevelItem(itemIndex)->child(i)->setFlags(flags);
+//        itemIndex++;
+//    }
+//}
+
+//void packetViewer::setFlagsAllChildren(Qt::ItemFlags flags){
+//    quint16 itemIndex = 1;
+//    while(this->topLevelItem(itemIndex)){
+//            for(quint16 i = 0; i < this->topLevelItem(itemIndex)->childCount(); ++i)
+//                this->topLevelItem(itemIndex)->child(i)->setFlags(flags);
+//         itemIndex++;
+//    }
+//}
+
+//void packetViewer::restoreAllItemsFlags(){
+//    quint16 item = 0;
+//    this->topLevelItem(item++)->setFlags(Qt::ItemIsEnabled);
+//    while(this->topLevelItem(item)){
+//        this->topLevelItem(item)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | (this->display ? Qt::ItemIsSelectable: Qt::ItemIsDragEnabled));
+//        for(quint16 i = 0; i < this->topLevelItem(item)->childCount(); ++i)
+//            this->topLevelItem(item)->child(i)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | (this->display ? Qt::ItemIsSelectable: Qt::ItemIsEditable));
+//    }
+//}

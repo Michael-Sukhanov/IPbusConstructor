@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     QRadioButton* but;
     foreach (but, radioButtons)
         connect(but, &QRadioButton::clicked, this, [but, this](){selectedTransactionChanged(CoresspondingTypes[but->objectName().remove("radioButton_")]);});
+    //Adding transaction
     connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_PACKET_WIEVER, [=](){
         //in case packet was sent recently we need to clear both trees
         if(!ui->treeWidget_PACKET_WIEVER->topLevelItem(0)){
@@ -60,6 +61,8 @@ MainWindow::MainWindow(QWidget *parent)
     //setting font for bars -- kostyl
     ui->progressBar_WORDS->setFont(QFont("FranklinGothic", 12));
     ui->progressBar_WORDS_EXPECTED->setFont(QFont("FranklinGothic", 12));
+
+
 }
 
 bool MainWindow::eventFilter(QObject * obj, QEvent* event){
