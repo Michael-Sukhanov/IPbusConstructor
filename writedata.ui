@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>249</width>
     <height>918</height>
    </rect>
   </property>
@@ -19,8 +19,11 @@
      <property name="font">
       <font>
        <family>Consolas</family>
-       <pointsize>10</pointsize>
+       <pointsize>19</pointsize>
       </font>
+     </property>
+     <property name="plainText">
+      <string/>
      </property>
     </widget>
    </item>

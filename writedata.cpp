@@ -8,7 +8,10 @@ writedata::writedata(QWidget *parent) :
 {
     ui->setupUi(this);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, [this](){ui->plainTextEdit->clear(); this->close();});
-    connect(ui->buttonBox, &QDialogButtonBox::accepted, [this](){handleTextEdit(); ui->plainTextEdit->clear(); emit editingFinished();});
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, [this](){
+        handleTextEdit();
+        ui->plainTextEdit->clear();
+        emit editingFinished();});
     setWindowTitle("Enter your data");
 }
 

@@ -5,7 +5,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow){
     ui->setupUi(this);
-    setWindowTitle(QCoreApplication::applicationName() + " v" + QCoreApplication::applicationVersion() + " alpha");
+    setWindowTitle(QCoreApplication::applicationName() + " v" + QCoreApplication::applicationVersion());
     CoresspondingTypes["WRITE"]   = write;
     CoresspondingTypes["READ"]    = read;
     CoresspondingTypes["NIREAD"]  = nonIncrementingRead;
@@ -85,6 +85,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->lineEdit_ORTERM->hide();
     ui->label_4->setText("");
     ui->label_ANDTERM->setText("");
+    ui->checkBox_RANDOMIZE_DATA->hide();
 
 
 }
@@ -120,6 +121,7 @@ MainWindow::~MainWindow(){
 
 void MainWindow::selectedTransactionChanged(const TransactionType type){
     currentType = type;
+    ui->checkBox_RANDOMIZE_DATA->setVisible(type == write || type == nonIncrementingWrite);
     ui->lineEdit_ORTERM ->setVisible (type == RMWbits);
     ui->lineEdit_ANDTERM->setVisible (type == RMWbits || type == RMWsum);
     ui->lineEdit_NWORDS ->setDisabled(type == RMWbits || type == RMWsum);

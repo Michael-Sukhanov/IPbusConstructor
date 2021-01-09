@@ -94,6 +94,7 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
 }
 
 void packetViewer::displayResponse(IPbusWord * const response, const quint16 size){
+    QString erString;
     this->display = true;
     this->transactions = 0; this->packetWords = 0;
     QTreeWidgetItem* packetHeader = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("   0x%08X: Packet header", response[0]), "", QString::number(this->packetWords++)}), true, pallete[6]);
@@ -101,7 +102,12 @@ void packetViewer::displayResponse(IPbusWord * const response, const quint16 siz
     while(this->packetWords < size){
         quint16 internalTransactionWords = 0;
         TransactionHeader header = TransactionHeader(response[this->packetWords]);
-        QTreeWidgetItem* parent = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("[%u]0x%08X: %s %u word%s", transactions++, quint32(header),
+        QTreeWidgetItem* parent;
+        if(errorTransaction(header, erString))
+            parent = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("[%u]0x%08X: %s", transactions++, quint32(header),
+                                                                       erString.toUtf8().data()), "", QString::number(this->packetWords++)}), true, pallete[header.TypeID]);
+        else
+            parent = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("[%u]0x%08X: %s %u word%s", transactions++, quint32(header),
                                                                                     header.typeIDString().toUtf8().data(), header.Words, (header.Words % 10 == 1 ? "" : "s")), "", QString::number(this->packetWords++)}), true, pallete[header.TypeID]);
         parent->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
         switch(header.TypeID){
@@ -274,6 +280,18 @@ void packetViewer::preapreMenu(const QPoint &pos){
 
 }
 
+bool packetViewer::errorTransaction(TransactionHeader header, QString &erInfo){
+    switch(header.InfoCode){
+    case 4: erInfo = "READ ERROR";
+            return true;
+    case 5: erInfo = "WRITE ERROR";
+            return true;
+    case 6: erInfo = "READ TIMEOUT";
+            return true;
+    case 7: erInfo = "WRITE TIMEOUT";
+            return true;
+    default: return false;}
+}
 
 //void packetViewer::setFlagsAllParents(Qt::ItemFlags flags, QTreeWidgetItem* item){
 //    quint16 itemIndex = 1;

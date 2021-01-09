@@ -76,6 +76,7 @@ private:
     QList<QTreeWidgetItem*> itemsSort(const QList<QTreeWidgetItem*> Itemlist);
     void copyWholePacket();
     void preapreMenu(const QPoint& pos);
+    bool errorTransaction(TransactionHeader header, QString& erInfo);
 
 
 
