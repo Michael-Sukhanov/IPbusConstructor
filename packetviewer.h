@@ -32,7 +32,7 @@ class packetViewer : public QTreeWidget
 public:
     packetViewer(QWidget *parent = nullptr, const QColor* pallete = colors);
     void addIPbusPacketHeader();
-    void addIPbusTransaction(TransactionType type, const quint8 nWords, const IPbusWord address, const IPbusWord ANDterm = 0, const IPbusWord ORterm = 0);
+    void addIPbusTransaction(TransactionType type, const quint8 nWords, const IPbusWord address, const QVector<quint32>* writeData = nullptr, const IPbusWord ANDterm = 0, const IPbusWord ORterm = 0);
     void displayResponse(IPbusWord * const response, const quint16 size);
     void reinit();
 

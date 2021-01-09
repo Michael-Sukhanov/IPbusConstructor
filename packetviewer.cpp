@@ -49,7 +49,7 @@ void packetViewer::addIPbusPacketHeader(){
 }
 
 //add IPbusTransaction to the tree
-void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords, const IPbusWord address, const IPbusWord ANDterm, const IPbusWord ORterm){
+void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords, const IPbusWord address, const QVector<quint32>* wordData, const IPbusWord ANDterm, const IPbusWord ORterm){
     counter internalTransactionWords = 0;
     TransactionHeader header = TransactionHeader(type, nWords, transactions);
     //Creating transaction item
@@ -67,7 +67,7 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
     switch (type) {
         case nonIncrementingWrite:
         case write: {for(quint8 i = 0; i < nWords; ++i)
-                       createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(QRandomGenerator::global()->generate()),
+                       createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(wordData ? wordData->at(i) :QRandomGenerator::global()->generate()),
                                                                             QString::number(internalTransactionWords++),
                                                                             QString::number(packetWords++)}))->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
                     break;}

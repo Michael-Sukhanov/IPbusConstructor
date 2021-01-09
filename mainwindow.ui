@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1060</width>
-    <height>880</height>
+    <height>911</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -45,18 +45,28 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_3">
+    <item row="0" column="2" colspan="3">
+     <widget class="QLabel" name="label_7">
+      <property name="text">
+       <string>target IP address:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
     <item row="0" column="0" rowspan="2">
      <widget class="QGroupBox" name="groupBox">
       <property name="minimumSize">
        <size>
         <width>480</width>
-        <height>0</height>
+        <height>290</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
         <width>480</width>
-        <height>16777215</height>
+        <height>290</height>
        </size>
       </property>
       <property name="title">
@@ -360,6 +370,153 @@ color: rgb(0, 0, 0);</string>
           <string>Set transaction parameters</string>
          </property>
          <layout class="QGridLayout" name="gridLayout">
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="lineEdit_ORTERM">
+            <property name="minimumSize">
+             <size>
+              <width>90</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>90</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Consolas</family>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
+            <property name="inputMask">
+             <string>&gt;HHHHHHHH</string>
+            </property>
+            <property name="text">
+             <string>00000000</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="lineEdit_NWORDS">
+            <property name="minimumSize">
+             <size>
+              <width>90</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>90</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Consolas</family>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>1</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="lineEdit_ANDTERM">
+            <property name="minimumSize">
+             <size>
+              <width>90</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>90</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Consolas</family>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
+            <property name="inputMask">
+             <string>&gt;HHHHHHHH</string>
+            </property>
+            <property name="text">
+             <string>00000000</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="font">
+             <font>
+              <family>Franklin Gothic Medium</family>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>nWords:</string>
+            </property>
+            <property name="textFormat">
+             <enum>Qt::AutoText</enum>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_ANDTERM">
+            <property name="font">
+             <font>
+              <family>Franklin Gothic Medium</family>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>AND term:</string>
+            </property>
+            <property name="textFormat">
+             <enum>Qt::AutoText</enum>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="font">
+             <font>
+              <family>Franklin Gothic Medium</family>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>OR term:</string>
+            </property>
+            <property name="textFormat">
+             <enum>Qt::AutoText</enum>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="0">
            <widget class="QLabel" name="label">
             <property name="font">
@@ -413,150 +570,13 @@ color: rgb(0, 0, 0);</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_2">
-            <property name="font">
-             <font>
-              <family>Franklin Gothic Medium</family>
-              <pointsize>12</pointsize>
-             </font>
+          <item row="4" column="0" colspan="2">
+           <widget class="QCheckBox" name="checkBox_RANDOMIZE_DATA">
+            <property name="layoutDirection">
+             <enum>Qt::RightToLeft</enum>
             </property>
             <property name="text">
-             <string>nWords:</string>
-            </property>
-            <property name="textFormat">
-             <enum>Qt::AutoText</enum>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="lineEdit_NWORDS">
-            <property name="minimumSize">
-             <size>
-              <width>90</width>
-              <height>20</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>90</width>
-              <height>20</height>
-             </size>
-            </property>
-            <property name="font">
-             <font>
-              <family>Consolas</family>
-              <pointsize>14</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>1</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_ANDTERM">
-            <property name="font">
-             <font>
-              <family>Franklin Gothic Medium</family>
-              <pointsize>12</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>AND term:</string>
-            </property>
-            <property name="textFormat">
-             <enum>Qt::AutoText</enum>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="lineEdit_ANDTERM">
-            <property name="minimumSize">
-             <size>
-              <width>90</width>
-              <height>20</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>90</width>
-              <height>20</height>
-             </size>
-            </property>
-            <property name="font">
-             <font>
-              <family>Consolas</family>
-              <pointsize>14</pointsize>
-             </font>
-            </property>
-            <property name="inputMask">
-             <string>&gt;HHHHHHHH</string>
-            </property>
-            <property name="text">
-             <string>00000000</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_4">
-            <property name="font">
-             <font>
-              <family>Franklin Gothic Medium</family>
-              <pointsize>12</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>OR term:</string>
-            </property>
-            <property name="textFormat">
-             <enum>Qt::AutoText</enum>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="lineEdit_ORTERM">
-            <property name="minimumSize">
-             <size>
-              <width>90</width>
-              <height>20</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>90</width>
-              <height>20</height>
-             </size>
-            </property>
-            <property name="font">
-             <font>
-              <family>Consolas</family>
-              <pointsize>14</pointsize>
-             </font>
-            </property>
-            <property name="inputMask">
-             <string>&gt;HHHHHHHH</string>
-            </property>
-            <property name="text">
-             <string>00000000</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             <string>Randomize Write Data</string>
             </property>
            </widget>
           </item>
@@ -595,65 +615,87 @@ color: rgb(0, 0, 0);</string>
       </layout>
      </widget>
     </item>
-    <item row="0" column="1" colspan="3">
-     <widget class="QLabel" name="label_7">
-      <property name="text">
-       <string>target IP address:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="4">
-     <widget class="QLineEdit" name="lineEdit_IPADDRESS">
+    <item row="2" column="3">
+     <widget class="QProgressBar" name="progressBar_WORDS_EXPECTED">
       <property name="minimumSize">
        <size>
-        <width>200</width>
-        <height>20</height>
+        <width>30</width>
+        <height>0</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
-        <width>90</width>
-        <height>20</height>
+        <width>30</width>
+        <height>16777215</height>
        </size>
       </property>
-      <property name="font">
-       <font>
-        <family>Consolas</family>
-        <pointsize>14</pointsize>
-       </font>
+      <property name="maximum">
+       <number>368</number>
       </property>
-      <property name="inputMask">
-       <string/>
-      </property>
-      <property name="text">
-       <string>127.0.0.1</string>
-      </property>
-      <property name="maxLength">
-       <number>32767</number>
+      <property name="value">
+       <number>0</number>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="format">
+       <string notr="true">%v</string>
+      </property>
      </widget>
     </item>
-    <item row="1" column="1" colspan="4">
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeType">
-       <enum>QSizePolicy::Fixed</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
+    <item row="2" column="2">
+     <widget class="QProgressBar" name="progressBar_WORDS">
+      <property name="minimumSize">
        <size>
-        <width>520</width>
-        <height>20</height>
+        <width>30</width>
+        <height>0</height>
        </size>
       </property>
-     </spacer>
+      <property name="maximumSize">
+       <size>
+        <width>30</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="maximum">
+       <number>368</number>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="textVisible">
+       <bool>true</bool>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="invertedAppearance">
+       <bool>false</bool>
+      </property>
+      <property name="format">
+       <string notr="true">%v</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="4" colspan="2">
+     <widget class="QPushButton" name="pushButton_SEND">
+      <property name="text">
+       <string>Send</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QPushButton" name="pushButton_CLEAR">
+      <property name="text">
+       <string>Clear request</string>
+      </property>
+     </widget>
     </item>
     <item row="2" column="0">
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -757,75 +799,7 @@ color: rgb(0, 0, 0);</string>
       </item>
      </layout>
     </item>
-    <item row="2" column="1">
-     <widget class="QProgressBar" name="progressBar_WORDS">
-      <property name="minimumSize">
-       <size>
-        <width>30</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>30</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="maximum">
-       <number>368</number>
-      </property>
-      <property name="value">
-       <number>0</number>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <property name="textVisible">
-       <bool>true</bool>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="invertedAppearance">
-       <bool>false</bool>
-      </property>
-      <property name="format">
-       <string notr="true">%v</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
-     <widget class="QProgressBar" name="progressBar_WORDS_EXPECTED">
-      <property name="minimumSize">
-       <size>
-        <width>30</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>30</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="maximum">
-       <number>368</number>
-      </property>
-      <property name="value">
-       <number>0</number>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="format">
-       <string notr="true">%v</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="3" colspan="2">
+    <item row="2" column="4" colspan="2">
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
        <widget class="QLabel" name="label_RESPONSE">
@@ -915,17 +889,37 @@ color: rgb(0, 0, 0);</string>
       </item>
      </layout>
     </item>
-    <item row="3" column="3" colspan="2">
-     <widget class="QPushButton" name="pushButton_SEND">
-      <property name="text">
-       <string>Send</string>
+    <item row="0" column="5">
+     <widget class="QLineEdit" name="lineEdit_IPADDRESS">
+      <property name="minimumSize">
+       <size>
+        <width>200</width>
+        <height>20</height>
+       </size>
       </property>
-     </widget>
-    </item>
-    <item row="3" column="0">
-     <widget class="QPushButton" name="pushButton_CLEAR">
+      <property name="maximumSize">
+       <size>
+        <width>90</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Consolas</family>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="inputMask">
+       <string/>
+      </property>
       <property name="text">
-       <string>Clear request</string>
+       <string>127.0.0.1</string>
+      </property>
+      <property name="maxLength">
+       <number>32767</number>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </item>

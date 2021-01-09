@@ -18,15 +18,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    packetviewer.cpp
+    packetviewer.cpp \
+    writedata.cpp
 
 HEADERS += \
     IPbusHeaders.h \
     mainwindow.h \
-    packetviewer.h
+    packetviewer.h \
+    writedata.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    writedata.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

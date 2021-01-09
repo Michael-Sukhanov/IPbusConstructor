@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
     CoresspondingTypes["RMWSUM"]  = RMWsum;
     CoresspondingTypes["RMWBITS"] = RMWbits;
     socket = new QUdpSocket(this);
+    writedata* window = new writedata(this);
     //find all radioButtons to connect them with onr slot
     QList<QRadioButton*> radioButtons = ui->centralwidget->findChildren<QRadioButton*>(QRegularExpression("radioButton_*"));
     QRadioButton* but;
@@ -20,6 +21,9 @@ MainWindow::MainWindow(QWidget *parent)
         connect(but, &QRadioButton::clicked, this, [but, this](){selectedTransactionChanged(CoresspondingTypes[but->objectName().remove("radioButton_")]);});
     //Adding transaction
     connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_PACKET_WIEVER, [=](){
+        if(!ui->checkBox_RANDOMIZE_DATA->isChecked() && (ui->radioButton_WRITE->isChecked() || ui->radioButton_NIWRITE->isChecked())){
+            window ->show();
+            return;}
         //in case packet was sent recently we need to clear both trees
         if(!ui->treeWidget_PACKET_WIEVER->topLevelItem(0)){
             ui->pushButton_SEND->setEnabled(true);
@@ -28,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
         const quint8     nWords = static_cast<quint8>(ui->lineEdit_NWORDS->text().toUInt(nullptr, 10));
         const IPbusWord andTerm = ui->lineEdit_ANDTERM->text().toUInt(nullptr, 16);
         const IPbusWord  orTerm = ui->lineEdit_ORTERM->text().toUInt(nullptr, 16);
-        ui->treeWidget_PACKET_WIEVER->addIPbusTransaction(currentType, nWords, address, andTerm, orTerm);
+        ui->treeWidget_PACKET_WIEVER->addIPbusTransaction(currentType, nWords, address, nullptr, andTerm, orTerm);
         nWordsChanged();});
     //progress bar processing
     connect(ui->treeWidget_PACKET_WIEVER, &packetViewer::wordsAmountChanged, this, &MainWindow::packetSizeChanged);
@@ -40,6 +44,20 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->pushButton_SEND, &QPushButton::clicked, this, &MainWindow::sendPacket);
     //clear outputs
     connect(ui->pushButton_CLEAR, &QPushButton::clicked, this, &MainWindow::clear);
+    //value for read from writeData window
+    connect(window, &writedata::valueReady, [this](quint32 value){this->writeData.append(value);});
+    //write Data window ok clicked
+    connect(window, &writedata::editingFinished, [this](){
+        if(!ui->treeWidget_PACKET_WIEVER->topLevelItem(0)){
+            ui->pushButton_SEND->setEnabled(true);
+            ui->treeWidget_PACKET_WIEVER->addIPbusPacketHeader();}
+        if(ui->treeWidget_PACKET_WIEVER->expextedResponseSize() == maxWordsPerPacket) return;
+        const quint16 leftSpace = maxWordsPerPacket - ui->treeWidget_PACKET_WIEVER->packetSize() - 2;
+        const quint8 nWords = leftSpace > this->writeData.size() ? this->writeData.size() : leftSpace;
+        const IPbusWord address = ui->lineEdit_ADDRESS->text().toUInt(nullptr, 16);
+        ui->treeWidget_PACKET_WIEVER->addIPbusTransaction(currentType, nWords, address, &this->writeData);
+        nWordsChanged();
+        this->writeData.clear();});
 
     ui->lineEdit_NWORDS->setValidator(new QRegExpValidator(QRegExp("[1-9]|[1-9][0-9]|1[0-9]{1,2}|2[0-4][0-9]|25[0-5]")));
     //validator for IP address
