@@ -181,12 +181,12 @@ void MainWindow::sendPacket(){
     //DInitialisation of requestViewer will let me write less code to apple QTreeWidget functions
     packetViewer* requestViewer = ui->treeWidget_PACKET_WIEVER;
     //First element in packet is Packet header/ It is getting from the first child of the first item in tree
-    request[numWord++] = requestViewer->topLevelItem(transactionCounter++)->text(0).mid(3,10).toUInt(nullptr, 16);
+    request[numWord++] = requestViewer->topLevelItem(transactionCounter++)->text(0).split("x").at(1).left(8).toUInt(nullptr, 16);
     //while words amount in packet less than the building packet size
     while(numWord < requestViewer->packetSize()){
         //we will get top level items from tree, which correspond to every transaction
         QTreeWidgetItem* parentTransaction = requestViewer->topLevelItem(transactionCounter++);
-       request[numWord++] = parentTransaction->text(0).mid(5,8).toUInt(nullptr, 16);
+       request[numWord++] = parentTransaction->text(0).split("x").at(1).left(8).toUInt(nullptr, 16);
         //the body (children) of every transaction will be placed in packet
         for(quint16 i = 0; i < parentTransaction->childCount(); ++i)
             request[numWord++] = parentTransaction->child(i)->text(0).toUInt(nullptr, 16);
