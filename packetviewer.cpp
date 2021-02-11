@@ -208,7 +208,7 @@ void packetViewer::setText(QTreeWidgetItem * const item, QStringList * const lis
 void packetViewer::changeTransactionPosition(QTreeWidgetItem * const headerItem, const counter transactionNo, counter &packetWordNo){
     QString previoustext = headerItem->text(0);
     //Change header item text
-    TransactionHeader header = static_cast<quint32>(headerItem->text(0).mid(5,8).toUInt(nullptr, 16));
+    TransactionHeader header = static_cast<quint32>(headerItem->text(0).split('x').at(1).left(8).toUInt(nullptr, 16));
     header.TransactionID = transactionNo;
     setText(headerItem, new QStringList({QString::asprintf("[%u]0x%08X: %s %u word%s", transactionNo, quint32(header),
                                          header.typeIDString().toUtf8().data(), header.Words, (header.Words % 10 == 1 ? "" : "s")), "", QString::number(packetWordNo++)}));
