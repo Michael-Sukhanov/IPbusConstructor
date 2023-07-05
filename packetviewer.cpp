@@ -292,33 +292,3 @@ bool packetViewer::errorTransaction(TransactionHeader header, QString &erInfo){
             return true;
     default: return false;}
 }
-
-//void packetViewer::setFlagsAllParents(Qt::ItemFlags flags, QTreeWidgetItem* item){
-//    quint16 itemIndex = 1;
-//    while(this->topLevelItem(itemIndex)){
-//        this->topLevelItem(itemIndex)->setFlags(flags);
-//        if(this->topLevelItem(itemIndex) != item)
-//            for(quint16 i = 0; i < this->topLevelItem(itemIndex)->childCount(); ++i)
-//                this->topLevelItem(itemIndex)->child(i)->setFlags(flags);
-//        itemIndex++;
-//    }
-//}
-
-//void packetViewer::setFlagsAllChildren(Qt::ItemFlags flags){
-//    quint16 itemIndex = 1;
-//    while(this->topLevelItem(itemIndex)){
-//            for(quint16 i = 0; i < this->topLevelItem(itemIndex)->childCount(); ++i)
-//                this->topLevelItem(itemIndex)->child(i)->setFlags(flags);
-//         itemIndex++;
-//    }
-//}
-
-//void packetViewer::restoreAllItemsFlags(){
-//    quint16 item = 0;
-//    this->topLevelItem(item++)->setFlags(Qt::ItemIsEnabled);
-//    while(this->topLevelItem(item)){
-//        this->topLevelItem(item)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | (this->display ? Qt::ItemIsSelectable: Qt::ItemIsDragEnabled));
-//        for(quint16 i = 0; i < this->topLevelItem(item)->childCount(); ++i)
-//            this->topLevelItem(item)->child(i)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | (this->display ? Qt::ItemIsSelectable: Qt::ItemIsEditable));
-//    }
-//}

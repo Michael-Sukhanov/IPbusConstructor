@@ -6,6 +6,7 @@
 #include "packetviewer.h"
 #include "writedata.h"
 #include <QtNetwork/QUdpSocket>
+#include <QSettings>
 
 const QRegExp IP("(0?0?[1-9]|0?[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.(([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\\.){2}(0?0?[1-9]|0?[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])");
 
@@ -31,7 +32,7 @@ private:
     Ui::MainWindow *ui;
     QVector<quint32> writeData;
     TransactionType currentType = read;
-    QHash<QString, TransactionType> CoresspondingTypes;
+    QHash<QString, TransactionType> сoresspondingTypes;
     //become true after sending packet
     bool sendFlag = false;
 
@@ -44,5 +45,8 @@ private slots:
     void sendPacket();
     void getResponse();
     void clear();
+
+    void getConfiguration();
+    void saveConfiguration();
 };
 #endif // MAINWINDOW_H

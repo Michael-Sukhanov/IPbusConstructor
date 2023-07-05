@@ -6,36 +6,38 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow){
     ui->setupUi(this);
     setWindowTitle(QCoreApplication::applicationName() + " v" + QCoreApplication::applicationVersion());
-    CoresspondingTypes["WRITE"]   = write;
-    CoresspondingTypes["READ"]    = read;
-    CoresspondingTypes["NIREAD"]  = nonIncrementingRead;
-    CoresspondingTypes["NIWRITE"] = nonIncrementingWrite;
-    CoresspondingTypes["RMWSUM"]  = RMWsum;
-    CoresspondingTypes["RMWBITS"] = RMWbits;
+    сoresspondingTypes["WRITE"]   = write;
+    сoresspondingTypes["READ"]    = read;
+    сoresspondingTypes["NIREAD"]  = nonIncrementingRead;
+    сoresspondingTypes["NIWRITE"] = nonIncrementingWrite;
+    сoresspondingTypes["RMWSUM"]  = RMWsum;
+    сoresspondingTypes["RMWBITS"] = RMWbits;
     socket = new QUdpSocket(this);
+
     writedata* window = new writedata(this);
+
     //find all radioButtons to connect them with onr slot
     QList<QRadioButton*> radioButtons = ui->centralwidget->findChildren<QRadioButton*>(QRegularExpression("radioButton_*"));
-    QRadioButton* but;
-    foreach (but, radioButtons)
-        connect(but, &QRadioButton::clicked, this, [but, this](){selectedTransactionChanged(CoresspondingTypes[but->objectName().remove("radioButton_")]);});
+    foreach (QRadioButton* but, radioButtons)
+        connect(but, &QRadioButton::clicked, this, [but, this](){selectedTransactionChanged(сoresspondingTypes[but->objectName().remove("radioButton_")]);});
+
     //Adding transaction
-    connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_PACKET_WIEVER, [=](){
+    connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_PACKET_VIEWER, [=](){
         if(!ui->checkBox_RANDOMIZE_DATA->isChecked() && (ui->radioButton_WRITE->isChecked() || ui->radioButton_NIWRITE->isChecked())){
             window ->show();
             return;}
         //in case packet was sent recently we need to clear both trees
-        if(!ui->treeWidget_PACKET_WIEVER->topLevelItem(0)){
+        if(!ui->treeWidget_PACKET_VIEWER->topLevelItem(0)){
             ui->pushButton_SEND->setEnabled(true);
-            ui->treeWidget_PACKET_WIEVER->addIPbusPacketHeader();}
+            ui->treeWidget_PACKET_VIEWER->addIPbusPacketHeader();}
         const IPbusWord address = ui->lineEdit_ADDRESS->text().toUInt(nullptr, 16);
         const quint8     nWords = static_cast<quint8>(ui->lineEdit_NWORDS->text().toUInt(nullptr, 10));
         const IPbusWord andTerm = ui->lineEdit_ANDTERM->text().toUInt(nullptr, 16);
         const IPbusWord  orTerm = ui->lineEdit_ORTERM->text().toUInt(nullptr, 16);
-        ui->treeWidget_PACKET_WIEVER->addIPbusTransaction(currentType, nWords, address, nullptr, andTerm, orTerm);
+        ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address, nullptr, andTerm, orTerm);
         nWordsChanged();});
     //progress bar processing
-    connect(ui->treeWidget_PACKET_WIEVER, &packetViewer::wordsAmountChanged, this, &MainWindow::packetSizeChanged);
+    connect(ui->treeWidget_PACKET_VIEWER, &packetViewer::wordsAmountChanged, this, &MainWindow::packetSizeChanged);
     //reaction on nWords changing as packet size is restricted by MTU
     connect(ui->lineEdit_NWORDS, &QLineEdit::textEdited, this, &MainWindow::nWordsChanged);
     //processing of the response from server to see it in tree widget
@@ -48,14 +50,14 @@ MainWindow::MainWindow(QWidget *parent)
     connect(window, &writedata::valueReady, [this](quint32 value){this->writeData.append(value);});
     //write Data window ok clicked
     connect(window, &writedata::editingFinished, [this](){
-        if(!ui->treeWidget_PACKET_WIEVER->topLevelItem(0)){
+        if(!ui->treeWidget_PACKET_VIEWER->topLevelItem(0)){
             ui->pushButton_SEND->setEnabled(true);
-            ui->treeWidget_PACKET_WIEVER->addIPbusPacketHeader();}
-        if(ui->treeWidget_PACKET_WIEVER->expextedResponseSize() == maxWordsPerPacket) return;
-        const quint16 leftSpace = maxWordsPerPacket - ui->treeWidget_PACKET_WIEVER->packetSize() - 2;
+            ui->treeWidget_PACKET_VIEWER->addIPbusPacketHeader();}
+        if(ui->treeWidget_PACKET_VIEWER->expextedResponseSize() == maxWordsPerPacket) return;
+        const quint16 leftSpace = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->packetSize() - 2;
         const quint8 nWords = leftSpace > this->writeData.size() ? this->writeData.size() : leftSpace;
         const IPbusWord address = ui->lineEdit_ADDRESS->text().toUInt(nullptr, 16);
-        ui->treeWidget_PACKET_WIEVER->addIPbusTransaction(currentType, nWords, address, &this->writeData);
+        ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address, &this->writeData);
         nWordsChanged();
         this->writeData.clear();});
 
@@ -63,14 +65,14 @@ MainWindow::MainWindow(QWidget *parent)
     //validator for IP address
     ui->lineEdit_IPADDRESS->setValidator(new QRegExpValidator(IP));
     //installation of eventFilter for delete button
-    ui->treeWidget_PACKET_WIEVER->installEventFilter(this);
+    ui->treeWidget_PACKET_VIEWER->installEventFilter(this);
 
     //resize width of coloumns in appropriate form in the beginning of the program
-    ui->treeWidget_PACKET_WIEVER->header()->resizeSection(0, 380);
+    ui->treeWidget_PACKET_VIEWER->header()->resizeSection(0, 380);
     ui->treeWidget_RESPONSE->header()->resizeSection(0, 380);
-    ui->treeWidget_PACKET_WIEVER->header()->resizeSection(1, 40);
+    ui->treeWidget_PACKET_VIEWER->header()->resizeSection(1, 40);
     ui->treeWidget_RESPONSE->header()->resizeSection(1, 40);
-    ui->treeWidget_PACKET_WIEVER->header()->resizeSection(2, 40);
+    ui->treeWidget_PACKET_VIEWER->header()->resizeSection(2, 40);
     ui->treeWidget_RESPONSE->header()->resizeSection(2, 40);
 
     //as th window is empty -> nothing to send
@@ -87,23 +89,25 @@ MainWindow::MainWindow(QWidget *parent)
     ui->label_ANDTERM->setText("");
     ui->checkBox_RANDOMIZE_DATA->hide();
 
+    getConfiguration();
+
 
 }
 
 bool MainWindow::eventFilter(QObject * obj, QEvent* event){
-    if (obj == ui->treeWidget_PACKET_WIEVER){
+    if (obj == ui->treeWidget_PACKET_VIEWER){
         if (event->type() == QEvent::KeyPress){
             QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
             if (keyEvent->key() == Qt::Key_Delete){
-                if(ui->treeWidget_PACKET_WIEVER->itemAbove(ui->treeWidget_PACKET_WIEVER->currentItem()) && !ui->treeWidget_PACKET_WIEVER->currentItem()->parent()){
-                    for(quint16 i = 0; i < ui->treeWidget_PACKET_WIEVER->currentItem()->childCount(); ++i)
-                        delete ui->treeWidget_PACKET_WIEVER->currentItem()->child(i);
-                    if(ui->treeWidget_PACKET_WIEVER->transactionsAmount() == 1){
-                        delete ui->treeWidget_PACKET_WIEVER->topLevelItem(0);
+                if(ui->treeWidget_PACKET_VIEWER->itemAbove(ui->treeWidget_PACKET_VIEWER->currentItem()) && !ui->treeWidget_PACKET_VIEWER->currentItem()->parent()){
+                    for(quint16 i = 0; i < ui->treeWidget_PACKET_VIEWER->currentItem()->childCount(); ++i)
+                        delete ui->treeWidget_PACKET_VIEWER->currentItem()->child(i);
+                    if(ui->treeWidget_PACKET_VIEWER->transactionsAmount() == 1){
+                        delete ui->treeWidget_PACKET_VIEWER->topLevelItem(0);
                         ui->pushButton_SEND->setEnabled(false);
                     }
-                    delete ui->treeWidget_PACKET_WIEVER->currentItem();
-                    ui->treeWidget_PACKET_WIEVER->reinit();
+                    delete ui->treeWidget_PACKET_VIEWER->currentItem();
+                    ui->treeWidget_PACKET_VIEWER->reinit();
                     nWordsChanged();
                     return true;
                 }else{
@@ -116,6 +120,7 @@ bool MainWindow::eventFilter(QObject * obj, QEvent* event){
 }
 
 MainWindow::~MainWindow(){
+    saveConfiguration();
     delete ui;
 }
 
@@ -133,7 +138,7 @@ void MainWindow::selectedTransactionChanged(const TransactionType type){
 }
 
 void MainWindow::packetSizeChanged(){
-    const counter newAmount = ui->treeWidget_PACKET_WIEVER->packetSize(), expectedAmount = ui->treeWidget_PACKET_WIEVER->expextedResponseSize();
+    const counter newAmount = ui->treeWidget_PACKET_VIEWER->packetSize(), expectedAmount = ui->treeWidget_PACKET_VIEWER->expextedResponseSize();
     QProgressBar* request = ui->progressBar_WORDS, *response = ui->progressBar_WORDS_EXPECTED;
     changeProgressBar(request, newAmount);
     changeProgressBar(response, expectedAmount);
@@ -150,8 +155,8 @@ void MainWindow::changeProgressBar(QProgressBar * const bar, const quint16 value
 }
 
 void MainWindow::nWordsChanged(){
-    const counter currentFreeSpaceRequest = maxWordsPerPacket - ui->treeWidget_PACKET_WIEVER->packetSize(),
-                  currentFreeSpaceResponse = maxWordsPerPacket - ui->treeWidget_PACKET_WIEVER->expextedResponseSize();
+    const counter currentFreeSpaceRequest = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->packetSize(),
+                  currentFreeSpaceResponse = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->expextedResponseSize();
     const quint8 currentNWords = static_cast<quint8>(ui->lineEdit_NWORDS->text().toUInt());
     bool addButtonEnabled = true;
     switch (currentType) {
@@ -179,7 +184,7 @@ void MainWindow::sendPacket(){
     //Declaration of the variables numWord - counter of words in packet, transactionCounter - counter of transactions in the packet
     quint16 numWord = 0, transactionCounter = 0;
     //DInitialisation of requestViewer will let me write less code to apple QTreeWidget functions
-    packetViewer* requestViewer = ui->treeWidget_PACKET_WIEVER;
+    packetViewer* requestViewer = ui->treeWidget_PACKET_VIEWER;
     //First element in packet is Packet header/ It is getting from the first child of the first item in tree
     request[numWord++] = requestViewer->topLevelItem(transactionCounter++)->text(0).split("x").at(1).left(8).toUInt(nullptr, 16);
     //while words amount in packet less than the building packet size
@@ -195,7 +200,7 @@ void MainWindow::sendPacket(){
     if(ui->lineEdit_IPADDRESS->text().contains(IP))
         socket->writeDatagram(Crequest, requestViewer->packetSize() * sizeof (IPbusWord), QHostAddress(ui->lineEdit_IPADDRESS->text()), 50001);
     else ui->statusbar->showMessage("No such address");
-    ui->treeWidget_PACKET_WIEVER->reinit();
+    ui->treeWidget_PACKET_VIEWER->reinit();
     nWordsChanged();
 }
 
@@ -214,9 +219,44 @@ void MainWindow::getResponse(){
 }
 
 void MainWindow::clear(){
-    ui->treeWidget_PACKET_WIEVER->clear();
-    ui->treeWidget_PACKET_WIEVER->reinit();
+    ui->treeWidget_PACKET_VIEWER->clear();
+    ui->treeWidget_PACKET_VIEWER->reinit();
     nWordsChanged();
     ui->pushButton_SEND->setEnabled(false);
 }
 
+//apply the settings from file
+void MainWindow::getConfiguration(){
+    QSettings settings(QCoreApplication::applicationName() + ".ini", QSettings::IniFormat);
+
+    settings.beginGroup("Network");
+    ui->lineEdit_IPADDRESS->setText(settings.value("TargetIP", "127.0.0.1").toString());
+    settings.endGroup();
+
+    settings.beginGroup("IPbus");
+    ui->lineEdit_ADDRESS->setText(settings.value("Address", "00000000").toString());
+    ui->lineEdit_ANDTERM->setText(settings.value("ANDterm", "FFFFFFFF").toString());
+    ui->lineEdit_ORTERM->setText(settings.value("ORTERM", "00000000").toString());
+    ui->lineEdit_NWORDS->setText(settings.value("nWords", "1").toString());
+    ui->checkBox_RANDOMIZE_DATA->setChecked(settings.value("RandomizeData", 0).toBool());
+    ui->centralwidget->findChild<QRadioButton *>("radioButton_" + сoresspondingTypes.key(static_cast<TransactionType>(settings.value("TransactionType", 0).toInt())))->click();
+    settings.endGroup();
+}
+
+//take the last session values from GUI and store them into the file
+void MainWindow::saveConfiguration(){
+    QSettings settings(QCoreApplication::applicationName() + ".ini", QSettings::IniFormat);
+
+    settings.beginGroup("Network");
+    settings.setValue("TargetIP", ui->lineEdit_IPADDRESS->text());
+    settings.endGroup();
+
+    settings.beginGroup("IPbus");
+    settings.setValue("TransactionType", currentType);
+    settings.setValue("Address", ui->lineEdit_ADDRESS->text());
+    settings.setValue("ORterm", ui->lineEdit_ORTERM->text());
+    settings.setValue("ANDterm", ui->lineEdit_ANDTERM->text());
+    settings.setValue("nWords", ui->lineEdit_NWORDS->text());
+    settings.setValue("RandomizeData", ui->checkBox_RANDOMIZE_DATA->isChecked() ? 1 : 0);
+    settings.endGroup();
+}

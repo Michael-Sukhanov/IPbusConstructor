@@ -134,7 +134,6 @@
              <font>
               <family>Franklin Gothic Medium</family>
               <pointsize>12</pointsize>
-              <weight>50</weight>
               <bold>false</bold>
               <stylestrategy>PreferAntialias</stylestrategy>
              </font>
@@ -175,7 +174,6 @@ color: rgb(0, 0, 0);</string>
              <font>
               <family>Franklin Gothic Medium</family>
               <pointsize>12</pointsize>
-              <weight>50</weight>
               <bold>false</bold>
               <stylestrategy>PreferAntialias</stylestrategy>
              </font>
@@ -216,7 +214,6 @@ color: rgb(0, 0, 0);</string>
              <font>
               <family>Franklin Gothic Medium</family>
               <pointsize>12</pointsize>
-              <weight>50</weight>
               <bold>false</bold>
               <stylestrategy>PreferAntialias</stylestrategy>
              </font>
@@ -254,7 +251,6 @@ color: rgb(0, 0, 0);</string>
              <font>
               <family>Franklin Gothic Medium</family>
               <pointsize>12</pointsize>
-              <weight>50</weight>
               <bold>false</bold>
               <stylestrategy>PreferAntialias</stylestrategy>
              </font>
@@ -292,7 +288,6 @@ color: rgb(0, 0, 0);</string>
              <font>
               <family>Franklin Gothic Medium</family>
               <pointsize>12</pointsize>
-              <weight>50</weight>
               <bold>false</bold>
               <stylestrategy>PreferAntialias</stylestrategy>
              </font>
@@ -331,7 +326,6 @@ background-color: rgb(255, 238, 214);
              <font>
               <family>Franklin Gothic Medium</family>
               <pointsize>12</pointsize>
-              <weight>50</weight>
               <bold>false</bold>
               <stylestrategy>PreferAntialias</stylestrategy>
              </font>
@@ -744,7 +738,7 @@ color: rgb(0, 0, 0);</string>
        </widget>
       </item>
       <item>
-       <widget class="packetViewer" name="treeWidget_PACKET_WIEVER">
+       <widget class="packetViewer" name="treeWidget_PACKET_VIEWER">
         <property name="minimumSize">
          <size>
           <width>480</width>
@@ -950,7 +944,7 @@ color: rgb(0, 0, 0);</string>
      <x>0</x>
      <y>0</y>
      <width>1060</width>
-     <height>26</height>
+     <height>24</height>
     </rect>
    </property>
   </widget>
