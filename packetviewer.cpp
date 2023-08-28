@@ -93,7 +93,7 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
     emit wordsAmountChanged();
 }
 
-void packetViewer::displayResponse(IPbusWord * const response, const quint16 size){
+void packetViewer::displayResponse(IPbusWord * const response, const quint16 size, const bool expanded){
     QString erString;
     this->display = true;
     this->transactions = 0; this->packetWords = 0;
@@ -123,6 +123,21 @@ void packetViewer::displayResponse(IPbusWord * const response, const quint16 siz
         default: break;
         }
     }
+    if(expanded) this->expandAllTopLevelItems();
+}
+
+void packetViewer::expandAllTopLevelItems()
+{
+    QList<QTreeWidgetItem *> items = getExpandebleItems();
+    for(QTreeWidgetItem* item : items)
+        if(!item->isExpanded())QTreeWidget::expandItem(item);
+}
+
+void packetViewer::collapseAllTopLEvelItems()
+{
+    QList<QTreeWidgetItem *> items = getExpandebleItems();
+    for(QTreeWidgetItem* item : items)
+        if(item->isExpanded())QTreeWidget::collapseItem(item);
 }
 
 
@@ -291,4 +306,13 @@ bool packetViewer::errorTransaction(TransactionHeader header, QString &erInfo){
     case 7: erInfo = "WRITE TIMEOUT";
             return true;
     default: return false;}
+}
+
+QList<QTreeWidgetItem *> packetViewer::getExpandebleItems()
+{
+    QList<QTreeWidgetItem *> result;
+    result.clear();
+    for(size_t i = 1; i < this->topLevelItemCount(); ++i)
+        if(this->topLevelItem(i)->childCount()) result.append(this->topLevelItem(i));
+    return result;
 }

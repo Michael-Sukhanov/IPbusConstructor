@@ -23,6 +23,7 @@ const QColor colors[] = {QColor("#DDDAE7"), //read
 
 const quint16 maxWordsPerPacket = 368;
 
+
 using  IPbusWord = quint32;
 using  counter = quint16;
 
@@ -33,12 +34,14 @@ public:
     packetViewer(QWidget *parent = nullptr, const QColor* pallete = colors);
     void addIPbusPacketHeader();
     void addIPbusTransaction(TransactionType type, const quint8 nWords, const IPbusWord address, const QVector<quint32>* writeData = nullptr, const IPbusWord ANDterm = 0, const IPbusWord ORterm = 0);
-    void displayResponse(IPbusWord * const response, const quint16 size);
+    void displayResponse(IPbusWord * const response, const quint16 size, const bool expanded = false);
+    void expandAllTopLevelItems();
+    void collapseAllTopLEvelItems();
     void reinit();
 
     const QColor* getPallete(){return this->pallete;}
     counter packetSize(){return this->packetWords;}
-    counter expextedResponseSize(){return this->expectedWords;}
+    counter expectedResponseSize(){return this->expectedWords;}
     counter transactionsAmount(){return this->transactions;}
 
 signals:
@@ -77,6 +80,7 @@ private:
     void copyWholePacket();
     void preapreMenu(const QPoint& pos);
     bool errorTransaction(TransactionHeader header, QString& erInfo);
+    QList<QTreeWidgetItem*> getExpandebleItems();
 
 
 

@@ -6,12 +6,12 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow){
     ui->setupUi(this);
     setWindowTitle(QCoreApplication::applicationName() + " v" + QCoreApplication::applicationVersion());
-    сoresspondingTypes["WRITE"]   = write;
-    сoresspondingTypes["READ"]    = read;
-    сoresspondingTypes["NIREAD"]  = nonIncrementingRead;
-    сoresspondingTypes["NIWRITE"] = nonIncrementingWrite;
-    сoresspondingTypes["RMWSUM"]  = RMWsum;
-    сoresspondingTypes["RMWBITS"] = RMWbits;
+    coresspondingTypes["WRITE"]   = write;
+    coresspondingTypes["READ"]    = read;
+    coresspondingTypes["NIREAD"]  = nonIncrementingRead;
+    coresspondingTypes["NIWRITE"] = nonIncrementingWrite;
+    coresspondingTypes["RMWSUM"]  = RMWsum;
+    coresspondingTypes["RMWBITS"] = RMWbits;
     socket = new QUdpSocket(this);
 
     writedata* window = new writedata(this);
@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     //find all radioButtons to connect them with onr slot
     QList<QRadioButton*> radioButtons = ui->centralwidget->findChildren<QRadioButton*>(QRegularExpression("radioButton_*"));
     foreach (QRadioButton* but, radioButtons)
-        connect(but, &QRadioButton::clicked, this, [but, this](){selectedTransactionChanged(сoresspondingTypes[but->objectName().remove("radioButton_")]);});
+        connect(but, &QRadioButton::clicked, this, [but, this](){selectedTransactionChanged(coresspondingTypes[but->objectName().remove("radioButton_")]);});
 
     //Adding transaction
     connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_PACKET_VIEWER, [=](){
@@ -53,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
         if(!ui->treeWidget_PACKET_VIEWER->topLevelItem(0)){
             ui->pushButton_SEND->setEnabled(true);
             ui->treeWidget_PACKET_VIEWER->addIPbusPacketHeader();}
-        if(ui->treeWidget_PACKET_VIEWER->expextedResponseSize() == maxWordsPerPacket) return;
+        if(ui->treeWidget_PACKET_VIEWER->expectedResponseSize() == maxWordsPerPacket) return;
         const quint16 leftSpace = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->packetSize() - 2;
         const quint8 nWords = leftSpace > this->writeData.size() ? this->writeData.size() : leftSpace;
         const IPbusWord address = ui->lineEdit_ADDRESS->text().toUInt(nullptr, 16);
@@ -75,7 +75,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->treeWidget_PACKET_VIEWER->header()->resizeSection(2, 40);
     ui->treeWidget_RESPONSE->header()->resizeSection(2, 40);
 
-    //as th window is empty -> nothing to send
+    //if the window is empty -> nothing to send
     ui->pushButton_SEND->setEnabled(false);
 
     //setting font for bars -- kostyl
@@ -90,6 +90,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->checkBox_RANDOMIZE_DATA->hide();
 
     getConfiguration();
+    //clearSequence(response);
+    //clearSequence(request);
 
 
 }
@@ -138,7 +140,7 @@ void MainWindow::selectedTransactionChanged(const TransactionType type){
 }
 
 void MainWindow::packetSizeChanged(){
-    const counter newAmount = ui->treeWidget_PACKET_VIEWER->packetSize(), expectedAmount = ui->treeWidget_PACKET_VIEWER->expextedResponseSize();
+    const counter newAmount = ui->treeWidget_PACKET_VIEWER->packetSize(), expectedAmount = ui->treeWidget_PACKET_VIEWER->expectedResponseSize();
     QProgressBar* request = ui->progressBar_WORDS, *response = ui->progressBar_WORDS_EXPECTED;
     changeProgressBar(request, newAmount);
     changeProgressBar(response, expectedAmount);
@@ -156,7 +158,7 @@ void MainWindow::changeProgressBar(QProgressBar * const bar, const quint16 value
 
 void MainWindow::nWordsChanged(){
     const counter currentFreeSpaceRequest = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->packetSize(),
-                  currentFreeSpaceResponse = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->expextedResponseSize();
+                  currentFreeSpaceResponse = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->expectedResponseSize();
     const quint8 currentNWords = static_cast<quint8>(ui->lineEdit_NWORDS->text().toUInt());
     bool addButtonEnabled = true;
     switch (currentType) {
@@ -191,7 +193,7 @@ void MainWindow::sendPacket(){
     while(numWord < requestViewer->packetSize()){
         //we will get top level items from tree, which correspond to every transaction
         QTreeWidgetItem* parentTransaction = requestViewer->topLevelItem(transactionCounter++);
-       request[numWord++] = parentTransaction->text(0).split("x").at(1).left(8).toUInt(nullptr, 16);
+        request[numWord++] = parentTransaction->text(0).split("x").at(1).left(8).toUInt(nullptr, 16);
         //the body (children) of every transaction will be placed in packet
         for(quint16 i = 0; i < parentTransaction->childCount(); ++i)
             request[numWord++] = parentTransaction->child(i)->text(0).toUInt(nullptr, 16);
@@ -205,7 +207,7 @@ void MainWindow::sendPacket(){
 }
 
 void MainWindow::getResponse(){
-    //when we have pending dataram
+    //when we have pending datagram
     if(socket->hasPendingDatagrams()){
         //we get response size, to get coressponding amount of bytes from the packet, which we got
         quint16 responseSize = static_cast<quint16>(socket->pendingDatagramSize());
@@ -214,7 +216,7 @@ void MainWindow::getResponse(){
         //new packet should be displayed, so it's neccesarry to clear response viewer
         ui->treeWidget_RESPONSE->clear();
         //call function, which will display response to user
-        ui->treeWidget_RESPONSE->displayResponse(response, responseSize / sizeof (IPbusWord));
+        if(responseSize) ui->treeWidget_RESPONSE->displayResponse(response, responseSize / sizeof (IPbusWord), expanded);
     }
 }
 
@@ -239,7 +241,12 @@ void MainWindow::getConfiguration(){
     ui->lineEdit_ORTERM->setText(settings.value("ORTERM", "00000000").toString());
     ui->lineEdit_NWORDS->setText(settings.value("nWords", "1").toString());
     ui->checkBox_RANDOMIZE_DATA->setChecked(settings.value("RandomizeData", 0).toBool());
-    ui->centralwidget->findChild<QRadioButton *>("radioButton_" + сoresspondingTypes.key(static_cast<TransactionType>(settings.value("TransactionType", 0).toInt())))->click();
+    ui->centralwidget->findChild<QRadioButton *>("radioButton_" + coresspondingTypes.key(static_cast<TransactionType>(settings.value("TransactionType", 0).toInt())))->click();
+    settings.endGroup();
+
+    settings.beginGroup("GUI");
+    expanded = settings.value("AlwaysExpanded", 0).toBool();
+    ui->checkBox_expandAll->setChecked(expanded);
     settings.endGroup();
 }
 
@@ -259,4 +266,20 @@ void MainWindow::saveConfiguration(){
     settings.setValue("nWords", ui->lineEdit_NWORDS->text());
     settings.setValue("RandomizeData", ui->checkBox_RANDOMIZE_DATA->isChecked() ? 1 : 0);
     settings.endGroup();
+
+    settings.beginGroup("GUI");
+    settings.setValue("AlwaysExpanded", ui->checkBox_expandAll->isChecked());
+    settings.endGroup();
 }
+
+
+
+void MainWindow::on_checkBox_expandAll_clicked()
+{
+    expanded = ui->checkBox_expandAll->isChecked();
+    if(expanded)
+        ui->treeWidget_RESPONSE->expandAllTopLevelItems();
+    else
+        ui->treeWidget_RESPONSE->collapseAllTopLEvelItems();
+}
+

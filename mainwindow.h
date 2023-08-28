@@ -32,9 +32,10 @@ private:
     Ui::MainWindow *ui;
     QVector<quint32> writeData;
     TransactionType currentType = read;
-    QHash<QString, TransactionType> сoresspondingTypes;
+    QHash<QString, TransactionType> coresspondingTypes;
     //become true after sending packet
     bool sendFlag = false;
+    bool expanded = false;
 
 private slots:
 
@@ -48,5 +49,7 @@ private slots:
 
     void getConfiguration();
     void saveConfiguration();
+
+    void on_checkBox_expandAll_clicked();
 };
 #endif // MAINWINDOW_H
