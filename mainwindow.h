@@ -29,13 +29,16 @@ private:
     QUdpSocket* socket;
     IPbusWord request[maxWordsPerPacket], response[maxWordsPerPacket];
     char* const Crequest = reinterpret_cast<char*>(request), * const Cresponse = reinterpret_cast<char*>(response);
+    quint16 responseSize = 0;
     Ui::MainWindow *ui;
     QVector<quint32> writeData;
     TransactionType currentType = read;
     QHash<QString, TransactionType> coresspondingTypes;
     //become true after sending packet
+
     bool sendFlag = false;
     bool expanded = false;
+    bool hiddenHeaders = false;
 
 private slots:
 
@@ -51,5 +54,6 @@ private slots:
     void saveConfiguration();
 
     void on_checkBox_expandAll_clicked();
+    void on_checkBox_removeHeaders_clicked();
 };
 #endif // MAINWINDOW_H

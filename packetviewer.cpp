@@ -93,7 +93,8 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
     emit wordsAmountChanged();
 }
 
-void packetViewer::displayResponse(IPbusWord * const response, const quint16 size, const bool expanded){
+void packetViewer::displayResponse(IPbusWord * const response, const quint16 size, const bool expanded, const bool hiddenHeaders){
+    itemsToHide.clear();
     QString erString;
     this->display = true;
     this->transactions = 0; this->packetWords = 0;
@@ -104,19 +105,48 @@ void packetViewer::displayResponse(IPbusWord * const response, const quint16 siz
         TransactionHeader header = TransactionHeader(response[this->packetWords]);
         QTreeWidgetItem* parent;
         if(errorTransaction(header, erString))
-            parent = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("[%u]0x%08X: %s", transactions++, quint32(header),
-                                                                       erString.toUtf8().data()), "", QString::number(this->packetWords++)}), true, pallete[header.TypeID]);
+            parent = createNewTreeWidgetItem(nullptr,
+                                             new QStringList({QString::asprintf("[%u]0x%08X: %s",
+                                                                       transactions,
+                                                                       quint32(header),
+                                                                       erString.toUtf8().data()),
+                                                                       "",
+                                                                       QString::number(this->packetWords)}),
+                                             true,
+                                             pallete[header.TypeID]);
         else
-            parent = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("[%u]0x%08X: %s %u word%s", transactions++, quint32(header),
-                                                                                    header.typeIDString().toUtf8().data(), header.Words, (header.Words % 10 == 1 ? "" : "s")), "", QString::number(this->packetWords++)}), true, pallete[header.TypeID]);
+            parent = createNewTreeWidgetItem(nullptr,
+                                             new QStringList({QString::asprintf("[%u]0x%08X: %s %u word%s",
+                                                              transactions,
+                                                              quint32(header),
+                                                              header.typeIDString().toUtf8().data(),
+                                                              header.Words,
+                                                              (header.Words % 10 == 1 ? "" : "s")),
+                                                              "",
+                                                              QString::number(this->packetWords)}),
+                                             true,
+                                             pallete[header.TypeID]);
+
+        this->packetWords++;
+        transactions++;
+
+        if(hiddenHeaders){itemsToHide.append(packetHeader); itemsToHide.append(parent);}
+
         parent->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
         switch(header.TypeID){
         case nonIncrementingRead:
         case read: {for(quint16 i = 0; i < header.Words; ++i)
-                    createNewTreeWidgetItem(parent, new QStringList({hexFormatFor(response[this->packetWords]), QString::number(internalTransactionWords++), QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+                        createNewTreeWidgetItem(hiddenHeaders ? nullptr : parent,
+                                                new QStringList({hexFormatFor(response[this->packetWords]),
+                                                QString::number(internalTransactionWords++),
+                                                QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
                     break;}
         case RMWbits:
-        case RMWsum:{if(header.Words) createNewTreeWidgetItem(parent, new QStringList({hexFormatFor(response[this->packetWords]), QString::number(internalTransactionWords++), QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+        case RMWsum:{if(header.Words)
+                        createNewTreeWidgetItem(hiddenHeaders ? nullptr : parent,
+                                                new QStringList({hexFormatFor(response[this->packetWords]),
+                                                QString::number(internalTransactionWords++),
+                                                QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
                     break;}
         case write:
         case nonIncrementingWrite:
@@ -124,20 +154,28 @@ void packetViewer::displayResponse(IPbusWord * const response, const quint16 siz
         }
     }
     if(expanded) this->expandAllTopLevelItems();
+    if(hiddenHeaders) hideHeaders();
 }
 
 void packetViewer::expandAllTopLevelItems()
 {
     QList<QTreeWidgetItem *> items = getExpandebleItems();
-    for(QTreeWidgetItem* item : items)
+    foreach(QTreeWidgetItem* item, items)
         if(!item->isExpanded())QTreeWidget::expandItem(item);
 }
 
 void packetViewer::collapseAllTopLEvelItems()
 {
     QList<QTreeWidgetItem *> items = getExpandebleItems();
-    for(QTreeWidgetItem* item : items)
+    foreach(QTreeWidgetItem* item, items)
         if(item->isExpanded())QTreeWidget::collapseItem(item);
+}
+
+void packetViewer::hideHeaders()
+{
+    if(!itemsToHide.isEmpty())
+        foreach(QTreeWidgetItem * item, itemsToHide)
+            item->setHidden(true);
 }
 
 

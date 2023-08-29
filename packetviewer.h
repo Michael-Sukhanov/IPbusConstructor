@@ -34,9 +34,13 @@ public:
     packetViewer(QWidget *parent = nullptr, const QColor* pallete = colors);
     void addIPbusPacketHeader();
     void addIPbusTransaction(TransactionType type, const quint8 nWords, const IPbusWord address, const QVector<quint32>* writeData = nullptr, const IPbusWord ANDterm = 0, const IPbusWord ORterm = 0);
-    void displayResponse(IPbusWord * const response, const quint16 size, const bool expanded = false);
+    void displayResponse(IPbusWord * const response, const quint16 size, const bool expanded = false, const bool hiddenHeaders = false);
+
     void expandAllTopLevelItems();
     void collapseAllTopLEvelItems();
+
+    void hideHeaders();
+
     void reinit();
 
     const QColor* getPallete(){return this->pallete;}
@@ -76,7 +80,9 @@ private:
 //    void setFlagsAllParents(Qt::ItemFlags flags = Qt::ItemIsEnabled, QTreeWidgetItem* item = nullptr);
 //    void setFlagsAllChildren(Qt::ItemFlags flags = Qt::ItemIsEnabled);
 //    void restoreAllItemsFlags();
+
     QList<QTreeWidgetItem*> itemsSort(const QList<QTreeWidgetItem*> Itemlist);
+    QList<QTreeWidgetItem*> itemsToHide;
     void copyWholePacket();
     void preapreMenu(const QPoint& pos);
     bool errorTransaction(TransactionHeader header, QString& erInfo);

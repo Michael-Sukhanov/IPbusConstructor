@@ -210,13 +210,13 @@ void MainWindow::getResponse(){
     //when we have pending datagram
     if(socket->hasPendingDatagrams()){
         //we get response size, to get coressponding amount of bytes from the packet, which we got
-        quint16 responseSize = static_cast<quint16>(socket->pendingDatagramSize());
+        responseSize = static_cast<quint16>(socket->pendingDatagramSize());
         //getting that bytes in char array Cresponse
         socket->readDatagram(Cresponse, responseSize);
         //new packet should be displayed, so it's neccesarry to clear response viewer
         ui->treeWidget_RESPONSE->clear();
         //call function, which will display response to user
-        if(responseSize) ui->treeWidget_RESPONSE->displayResponse(response, responseSize / sizeof (IPbusWord), expanded);
+        if(responseSize) ui->treeWidget_RESPONSE->displayResponse(response, responseSize / sizeof (IPbusWord), expanded, hiddenHeaders);
     }
 }
 
@@ -246,7 +246,13 @@ void MainWindow::getConfiguration(){
 
     settings.beginGroup("GUI");
     expanded = settings.value("AlwaysExpanded", 0).toBool();
+    hiddenHeaders = settings.value("HiddenHeaders", 0).toBool();
+
     ui->checkBox_expandAll->setChecked(expanded);
+    ui->checkBox_removeHeaders->setChecked(hiddenHeaders);
+
+    ui->checkBox_expandAll->setEnabled(!hiddenHeaders);
+
     settings.endGroup();
 }
 
@@ -269,6 +275,7 @@ void MainWindow::saveConfiguration(){
 
     settings.beginGroup("GUI");
     settings.setValue("AlwaysExpanded", ui->checkBox_expandAll->isChecked());
+    settings.setValue("HiddenHeaders", ui->checkBox_removeHeaders->isChecked());
     settings.endGroup();
 }
 
@@ -281,5 +288,16 @@ void MainWindow::on_checkBox_expandAll_clicked()
         ui->treeWidget_RESPONSE->expandAllTopLevelItems();
     else
         ui->treeWidget_RESPONSE->collapseAllTopLEvelItems();
+}
+
+
+void MainWindow::on_checkBox_removeHeaders_clicked(){
+
+    hiddenHeaders = ui->checkBox_removeHeaders->isChecked();
+
+    ui->checkBox_expandAll->setEnabled(!hiddenHeaders);
+
+    ui->treeWidget_RESPONSE->clear();
+    if(responseSize)ui->treeWidget_RESPONSE->displayResponse(response, responseSize / sizeof(IPbusWord), expanded, hiddenHeaders);
 }
 
