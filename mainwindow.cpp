@@ -139,6 +139,8 @@ void MainWindow::setMultiMode(bool on)
     foreach (QPushButton* but, ui->centralwidget->findChildren<QPushButton*>(QRegularExpression("pushButton_([01][0-9]|20)")))
         but->setEnabled(on);
     ui->pushButton_ADD->setEnabled(!multiMode || (moduleMask && multiMode));
+    ui->lineEdit_ADDRESS->setInputMask(on ? ">HHH" : ">HHHHHHHH");
+    ui->lineEdit_ADDRESS->setValidator(on ? new QRegExpValidator(QRegExp("([10][0-9A-F][0-9A-F])"/*"|([0-9A-F][0-9A-F])|([0-9A-F])"*/)) : new QRegExpValidator(nullptr));
     nWordsChanged();
 }
 
