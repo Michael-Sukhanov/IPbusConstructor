@@ -21,6 +21,9 @@ MainWindow::MainWindow(QWidget *parent)
     foreach (QRadioButton* but, radioButtons)
         connect(but, &QRadioButton::clicked, this, [but, this](){selectedTransactionChanged(coresspondingTypes[but->objectName().remove("radioButton_")]);});
 
+    QList<QPushButton *> maskButtons = ui->centralwidget->findChildren<QPushButton*>(QRegularExpression("pushButton_([01][0-9]|20)"));
+    foreach(QPushButton* but, maskButtons)
+        connect(but, &QPushButton::clicked, this, [but, this](){maskChanged(but);});
     //Adding transaction
     connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_PACKET_VIEWER, [=](){
         if(!ui->checkBox_RANDOMIZE_DATA->isChecked() && (ui->radioButton_WRITE->isChecked() || ui->radioButton_NIWRITE->isChecked())){
@@ -34,7 +37,11 @@ MainWindow::MainWindow(QWidget *parent)
         const quint8     nWords = static_cast<quint8>(ui->lineEdit_NWORDS->text().toUInt(nullptr, 10));
         const IPbusWord andTerm = ui->lineEdit_ANDTERM->text().toUInt(nullptr, 16);
         const IPbusWord  orTerm = ui->lineEdit_ORTERM->text().toUInt(nullptr, 16);
-        ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address, nullptr, andTerm, orTerm);
+        if(multiMode){
+            for(size_t i = 0; i < 21; i++)
+               if(moduleMask & 1 << i) ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address + 0x200 * i, nullptr, andTerm, orTerm);
+        }else
+            ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address, nullptr, andTerm, orTerm);
         nWordsChanged();});
     //progress bar processing
     connect(ui->treeWidget_PACKET_VIEWER, &packetViewer::wordsAmountChanged, this, &MainWindow::packetSizeChanged);
@@ -93,7 +100,7 @@ MainWindow::MainWindow(QWidget *parent)
     //clearSequence(response);
     //clearSequence(request);
 
-
+    nWordsChanged();
 }
 
 bool MainWindow::eventFilter(QObject * obj, QEvent* event){
@@ -119,6 +126,34 @@ bool MainWindow::eventFilter(QObject * obj, QEvent* event){
         }
     }
     return QMainWindow::eventFilter(obj, event);
+}
+
+void MainWindow::setMultiMode(bool on)
+{
+    foreach (QPushButton* but, ui->centralwidget->findChildren<QPushButton*>(QRegularExpression("pushButton_([01][0-9]|20)")))
+        but->setEnabled(on);
+    ui->pushButton_ADD->setEnabled(!multiMode || (moduleMask && multiMode));
+    nWordsChanged();
+}
+
+void MainWindow::setMask(quint32 mask)
+{
+    for(size_t i = 0; i < 21; ++i){
+        QPushButton* but = ui->centralwidget->findChild<QPushButton*>("pushButton_" + QString::asprintf("%02d", i));
+        if(but) but->setChecked(mask & 1 << i);
+    }
+    nWordsChanged();
+}
+
+quint8 MainWindow::amountOfActiveModules()
+{
+    quint32 tmp = moduleMask;
+    quint8 retValue = 0;
+    while(tmp){
+        tmp &= (tmp - 1);
+        ++retValue;
+    }
+    return retValue;
 }
 
 MainWindow::~MainWindow(){
@@ -156,25 +191,41 @@ void MainWindow::changeProgressBar(QProgressBar * const bar, const quint16 value
     bar->setValue(value);
 }
 
+void MainWindow::maskChanged(QPushButton * const but)
+{
+    quint8 pos = but->objectName().right(2).toInt();
+    if(but->isChecked())
+        moduleMask |= 1 << pos;
+    else
+        moduleMask ^= 1 << pos;
+    ui->pushButton_ADD->setEnabled(!multiMode || (moduleMask && multiMode));
+    nWordsChanged();
+}
+
 void MainWindow::nWordsChanged(){
     const counter currentFreeSpaceRequest = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->packetSize(),
                   currentFreeSpaceResponse = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->expectedResponseSize();
     const quint8 currentNWords = static_cast<quint8>(ui->lineEdit_NWORDS->text().toUInt());
+    const quint8 transactionsAmount = multiMode ? amountOfActiveModules() : 1;
     bool addButtonEnabled = true;
     switch (currentType) {
     case read:
     case nonIncrementingRead:
-        addButtonEnabled = currentFreeSpaceRequest >= 2 && currentFreeSpaceResponse >= 1 + currentNWords;
+        addButtonEnabled = (currentFreeSpaceRequest  >= 2 * transactionsAmount) &&
+                           (currentFreeSpaceResponse >= (1 + currentNWords) * transactionsAmount);
         break;
     case write:
     case nonIncrementingWrite:
-        addButtonEnabled = currentFreeSpaceRequest >= 2 + currentNWords && currentFreeSpaceResponse >= 1;
+        addButtonEnabled = (currentFreeSpaceRequest  >= (2 + currentNWords) * transactionsAmount) &&
+                           (currentFreeSpaceResponse >= transactionsAmount);
         break;
     case RMWsum:
-        addButtonEnabled = currentFreeSpaceRequest >= 3 && currentFreeSpaceResponse >= 2;
+        addButtonEnabled = (currentFreeSpaceRequest  >= 3 * transactionsAmount) &&
+                           (currentFreeSpaceResponse >= 2 * transactionsAmount);
         break;
     case RMWbits:
-        addButtonEnabled = currentFreeSpaceRequest >= 4 && currentFreeSpaceResponse >= 2;
+        addButtonEnabled = (currentFreeSpaceRequest  >= 4 * transactionsAmount) &&
+                           (currentFreeSpaceResponse >= 2 * transactionsAmount);
         break;
     default: break;
     }
@@ -238,22 +289,30 @@ void MainWindow::getConfiguration(){
     settings.beginGroup("IPbus");
     ui->lineEdit_ADDRESS->setText(settings.value("Address", "00000000").toString());
     ui->lineEdit_ANDTERM->setText(settings.value("ANDterm", "FFFFFFFF").toString());
-    ui->lineEdit_ORTERM->setText(settings.value("ORTERM", "00000000").toString());
-    ui->lineEdit_NWORDS->setText(settings.value("nWords", "1").toString());
+    ui->lineEdit_ORTERM ->setText(settings.value("ORTERM", "00000000").toString());
+    ui->lineEdit_NWORDS ->setText(settings.value("nWords", "1").toString());
     ui->checkBox_RANDOMIZE_DATA->setChecked(settings.value("RandomizeData", 0).toBool());
     ui->centralwidget->findChild<QRadioButton *>("radioButton_" + coresspondingTypes.key(static_cast<TransactionType>(settings.value("TransactionType", 0).toInt())))->click();
     settings.endGroup();
 
     settings.beginGroup("GUI");
-    expanded = settings.value("AlwaysExpanded", 0).toBool();
-    hiddenHeaders = settings.value("HiddenHeaders", 0).toBool();
-
-    ui->checkBox_expandAll->setChecked(expanded);
-    ui->checkBox_removeHeaders->setChecked(hiddenHeaders);
-
-    ui->checkBox_expandAll->setEnabled(!hiddenHeaders);
-
+    expanded = settings.value("AlwaysExpanded", 0).toBool();    // 1)
+    hiddenHeaders = settings.value("HiddenHeaders", 0).toBool();// 2)
+    multiMode = settings.value("MultiMode", 0).toBool();        // 3)
+    moduleMask = settings.value("Mask", 0).toString().toUInt(nullptr, 16);
     settings.endGroup();
+
+
+    ui->checkBox_expandAll    ->setChecked(expanded      ); //1)
+    ui->checkBox_removeHeaders->setChecked(hiddenHeaders ); //2)
+    ui->checkBox_multiMode    ->setChecked(multiMode     ); //3)
+
+    ui->checkBox_expandAll    ->setEnabled(!hiddenHeaders);//2)
+
+    setMultiMode(multiMode); //3)
+
+    setMask(moduleMask);
+    ui->pushButton_ADD->setEnabled(!multiMode || (moduleMask && multiMode));
 }
 
 //take the last session values from GUI and store them into the file
@@ -265,17 +324,19 @@ void MainWindow::saveConfiguration(){
     settings.endGroup();
 
     settings.beginGroup("IPbus");
-    settings.setValue("TransactionType", currentType);
-    settings.setValue("Address", ui->lineEdit_ADDRESS->text());
-    settings.setValue("ORterm", ui->lineEdit_ORTERM->text());
-    settings.setValue("ANDterm", ui->lineEdit_ANDTERM->text());
-    settings.setValue("nWords", ui->lineEdit_NWORDS->text());
-    settings.setValue("RandomizeData", ui->checkBox_RANDOMIZE_DATA->isChecked() ? 1 : 0);
+    settings.setValue("TransactionType", currentType                );
+    settings.setValue("Address",        ui->lineEdit_ADDRESS->text());
+    settings.setValue("ORterm",         ui->lineEdit_ORTERM-> text() );
+    settings.setValue("ANDterm",        ui->lineEdit_ANDTERM->text());
+    settings.setValue("nWords",         ui->lineEdit_NWORDS-> text() );
+    settings.setValue("RandomizeData",  ui->checkBox_RANDOMIZE_DATA->isChecked() ? 1 : 0);
     settings.endGroup();
 
     settings.beginGroup("GUI");
-    settings.setValue("AlwaysExpanded", ui->checkBox_expandAll->isChecked());
-    settings.setValue("HiddenHeaders", ui->checkBox_removeHeaders->isChecked());
+    settings.setValue("AlwaysExpanded", expanded     );
+    settings.setValue("HiddenHeaders" , hiddenHeaders);
+    settings.setValue("MultiMode"     , multiMode    );
+    settings.setValue("Mask", QString::asprintf("%06X", moduleMask));
     settings.endGroup();
 }
 
@@ -299,5 +360,12 @@ void MainWindow::on_checkBox_removeHeaders_clicked(){
 
     ui->treeWidget_RESPONSE->clear();
     if(responseSize)ui->treeWidget_RESPONSE->displayResponse(response, responseSize / sizeof(IPbusWord), expanded, hiddenHeaders);
+}
+
+
+void MainWindow::on_checkBox_multiMode_clicked()
+{
+    multiMode = ui->checkBox_multiMode->isChecked();
+    setMultiMode(multiMode);
 }
 

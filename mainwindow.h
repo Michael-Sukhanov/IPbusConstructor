@@ -35,16 +35,23 @@ private:
     TransactionType currentType = read;
     QHash<QString, TransactionType> coresspondingTypes;
     //become true after sending packet
+    void setMultiMode(bool);
+    void setMask(quint32);
 
     bool sendFlag = false;
     bool expanded = false;
     bool hiddenHeaders = false;
+    bool multiMode = false;
+    quint32 moduleMask = 0x0;
+    quint8 amountOfActiveModules();
 
 private slots:
 
     void selectedTransactionChanged(const TransactionType type);
     void packetSizeChanged();
     void changeProgressBar(QProgressBar* const bar, const quint16 value);
+    void maskChanged(QPushButton* const);
+
     void nWordsChanged();
     void sendPacket();
     void getResponse();
@@ -55,5 +62,6 @@ private slots:
 
     void on_checkBox_expandAll_clicked();
     void on_checkBox_removeHeaders_clicked();
+    void on_checkBox_multiMode_clicked();
 };
 #endif // MAINWINDOW_H
