@@ -64,8 +64,14 @@ MainWindow::MainWindow(QWidget *parent)
         const quint16 leftSpace = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->packetSize() - 2;
         const quint8 nWords = leftSpace > this->writeData.size() ? this->writeData.size() : leftSpace;
         const IPbusWord address = ui->lineEdit_ADDRESS->text().toUInt(nullptr, 16);
-        ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address, &this->writeData);
+        if(multiMode){
+            for(size_t i = 0; i < 21; i++)
+               if(moduleMask & 1 << i) ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address + 0x200 * i, &this->writeData);
+        }else
+            ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address, &this->writeData);
         nWordsChanged();
+//        ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address, &this->writeData);
+//        nWordsChanged();
         this->writeData.clear();});
 
     ui->lineEdit_NWORDS->setValidator(new QRegExpValidator(QRegExp("[1-9]|[1-9][0-9]|1[0-9]{1,2}|2[0-4][0-9]|25[0-5]")));
