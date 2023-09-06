@@ -25,26 +25,26 @@ MainWindow::MainWindow(QWidget *parent)
     foreach(QPushButton* but, maskButtons)
         connect(but, &QPushButton::clicked, this, [but, this](){maskChanged(but);});
     //Adding transaction
-    connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_PACKET_VIEWER, [=](){
+    connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_REQUEST, [=](){
         if(!ui->checkBox_RANDOMIZE_DATA->isChecked() && (ui->radioButton_WRITE->isChecked() || ui->radioButton_NIWRITE->isChecked())){
             window ->show();
             return;}
         //in case packet was sent recently we need to clear both trees
-        if(!ui->treeWidget_PACKET_VIEWER->topLevelItem(0)){
+        if(!ui->treeWidget_REQUEST->topLevelItem(0)){
             ui->pushButton_SEND->setEnabled(true);
-            ui->treeWidget_PACKET_VIEWER->addIPbusPacketHeader();}
+            ui->treeWidget_REQUEST->addIPbusPacketHeader();}
         const IPbusWord address = ui->lineEdit_ADDRESS->text().toUInt(nullptr, 16);
         const quint8     nWords = static_cast<quint8>(ui->lineEdit_NWORDS->text().toUInt(nullptr, 10));
         const IPbusWord andTerm = ui->lineEdit_ANDTERM->text().toUInt(nullptr, 16);
         const IPbusWord  orTerm = ui->lineEdit_ORTERM->text().toUInt(nullptr, 16);
         if(multiMode){
             for(size_t i = 0; i < 21; i++)
-               if(moduleMask & 1 << i) ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address + 0x200 * i, nullptr, andTerm, orTerm);
+               if(moduleMask & 1 << i) ui->treeWidget_REQUEST->addIPbusTransaction(currentType, nWords, address + 0x200 * i, nullptr, andTerm, orTerm);
         }else
-            ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address, nullptr, andTerm, orTerm);
+            ui->treeWidget_REQUEST->addIPbusTransaction(currentType, nWords, address, nullptr, andTerm, orTerm);
         nWordsChanged();});
     //progress bar processing
-    connect(ui->treeWidget_PACKET_VIEWER, &packetViewer::wordsAmountChanged, this, &MainWindow::packetSizeChanged);
+    connect(ui->treeWidget_REQUEST, &packetViewer::wordsAmountChanged, this, &MainWindow::packetSizeChanged);
     //reaction on nWords changing as packet size is restricted by MTU
     connect(ui->lineEdit_NWORDS, &QLineEdit::textEdited, this, &MainWindow::nWordsChanged);
     //processing of the response from server to see it in tree widget
@@ -57,18 +57,18 @@ MainWindow::MainWindow(QWidget *parent)
     connect(window, &writedata::valueReady, [this](quint32 value){this->writeData.append(value);});
     //write Data window ok clicked
     connect(window, &writedata::editingFinished, [this](){
-        if(!ui->treeWidget_PACKET_VIEWER->topLevelItem(0)){
+        if(!ui->treeWidget_REQUEST->topLevelItem(0)){
             ui->pushButton_SEND->setEnabled(true);
-            ui->treeWidget_PACKET_VIEWER->addIPbusPacketHeader();}
-        if(ui->treeWidget_PACKET_VIEWER->expectedResponseSize() == maxWordsPerPacket) return;
-        const quint16 leftSpace = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->packetSize() - 2;
+            ui->treeWidget_REQUEST->addIPbusPacketHeader();}
+        if(ui->treeWidget_REQUEST->expectedResponseSize() == maxWordsPerPacket) return;
+        const quint16 leftSpace = maxWordsPerPacket - ui->treeWidget_REQUEST->packetSize() - 2;
         const quint8 nWords = leftSpace > this->writeData.size() ? this->writeData.size() : leftSpace;
         const IPbusWord address = ui->lineEdit_ADDRESS->text().toUInt(nullptr, 16);
         if(multiMode){
             for(size_t i = 0; i < 21; i++)
-               if(moduleMask & 1 << i) ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address + 0x200 * i, &this->writeData);
+               if(moduleMask & 1 << i) ui->treeWidget_REQUEST->addIPbusTransaction(currentType, nWords, address + 0x200 * i, &this->writeData);
         }else
-            ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address, &this->writeData);
+            ui->treeWidget_REQUEST->addIPbusTransaction(currentType, nWords, address, &this->writeData);
         nWordsChanged();
 //        ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address, &this->writeData);
 //        nWordsChanged();
@@ -78,18 +78,16 @@ MainWindow::MainWindow(QWidget *parent)
     //validator for IP address
     ui->lineEdit_IPADDRESS->setValidator(new QRegExpValidator(IP));
     //installation of eventFilter for delete button
-    ui->treeWidget_PACKET_VIEWER->installEventFilter(this);
+    ui->treeWidget_REQUEST->installEventFilter(this);
 
     //resize width of coloumns in appropriate form in the beginning of the program
-    ui->treeWidget_PACKET_VIEWER->header()->resizeSection(0, 380);
+    ui->treeWidget_REQUEST->header()->resizeSection(0, 380);
     ui->treeWidget_RESPONSE->header()->resizeSection(0, 380);
-    ui->treeWidget_PACKET_VIEWER->header()->resizeSection(1, 40);
+    ui->treeWidget_REQUEST->header()->resizeSection(1, 40);
     ui->treeWidget_RESPONSE->header()->resizeSection(1, 40);
-    ui->treeWidget_PACKET_VIEWER->header()->resizeSection(2, 40);
+    ui->treeWidget_REQUEST->header()->resizeSection(2, 40);
     ui->treeWidget_RESPONSE->header()->resizeSection(2, 40);
 
-    //if the window is empty -> nothing to send
-    ui->pushButton_SEND->setEnabled(false);
 
     //setting font for bars -- kostyl
     ui->progressBar_WORDS->setFont(QFont("FranklinGothic", 12));
@@ -107,22 +105,25 @@ MainWindow::MainWindow(QWidget *parent)
     //clearSequence(request);
 
     nWordsChanged();
+
+    //if the window is empty -> nothing to send
+    ui->pushButton_SEND->setEnabled(ui->treeWidget_REQUEST->topLevelItem(0));
 }
 
 bool MainWindow::eventFilter(QObject * obj, QEvent* event){
-    if (obj == ui->treeWidget_PACKET_VIEWER){
+    if (obj == ui->treeWidget_REQUEST){
         if (event->type() == QEvent::KeyPress){
             QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
             if (keyEvent->key() == Qt::Key_Delete){
-                if(ui->treeWidget_PACKET_VIEWER->itemAbove(ui->treeWidget_PACKET_VIEWER->currentItem()) && !ui->treeWidget_PACKET_VIEWER->currentItem()->parent()){
-                    for(quint16 i = 0; i < ui->treeWidget_PACKET_VIEWER->currentItem()->childCount(); ++i)
-                        delete ui->treeWidget_PACKET_VIEWER->currentItem()->child(i);
-                    if(ui->treeWidget_PACKET_VIEWER->transactionsAmount() == 1){
-                        delete ui->treeWidget_PACKET_VIEWER->topLevelItem(0);
+                if(ui->treeWidget_REQUEST->itemAbove(ui->treeWidget_REQUEST->currentItem()) && !ui->treeWidget_REQUEST->currentItem()->parent()){
+                    for(quint16 i = 0; i < ui->treeWidget_REQUEST->currentItem()->childCount(); ++i)
+                        delete ui->treeWidget_REQUEST->currentItem()->child(i);
+                    if(ui->treeWidget_REQUEST->transactionsAmount() == 1){
+                        delete ui->treeWidget_REQUEST->topLevelItem(0);
                         ui->pushButton_SEND->setEnabled(false);
                     }
-                    delete ui->treeWidget_PACKET_VIEWER->currentItem();
-                    ui->treeWidget_PACKET_VIEWER->reinit();
+                    delete ui->treeWidget_REQUEST->currentItem();
+                    ui->treeWidget_REQUEST->reinit();
                     nWordsChanged();
                     return true;
                 }else{
@@ -138,9 +139,12 @@ void MainWindow::setMultiMode(bool on)
 {
     foreach (QPushButton* but, ui->centralwidget->findChildren<QPushButton*>(QRegularExpression("pushButton_([01][0-9]|20)")))
         but->setEnabled(on);
+    ui->label_A_modules->setEnabled(on);
+    ui->label_C_modules->setEnabled(on);
+    ui->label_TCM->setEnabled(on);
     ui->pushButton_ADD->setEnabled(!multiMode || (moduleMask && multiMode));
     ui->lineEdit_ADDRESS->setInputMask(on ? ">HHH" : ">HHHHHHHH");
-    ui->lineEdit_ADDRESS->setValidator(on ? new QRegExpValidator(QRegExp("([10][0-9A-F][0-9A-F])"/*"|([0-9A-F][0-9A-F])|([0-9A-F])"*/)) : new QRegExpValidator(nullptr));
+    ui->lineEdit_ADDRESS->setValidator(on ? new QRegExpValidator(QRegExp("([10]?[0-9A-F]?[0-9A-F]?)"/*"|([0-9A-F][0-9A-F])|([0-9A-F])"*/)) : new QRegExpValidator(nullptr));
     nWordsChanged();
 }
 
@@ -151,6 +155,48 @@ void MainWindow::setMask(quint32 mask)
         if(but) but->setChecked(mask & 1 << i);
     }
     nWordsChanged();
+}
+
+void MainWindow::makeRequestFromArray(const quint16 requestSize)
+{
+ ui->treeWidget_REQUEST->addIPbusPacketHeader(request[0]);
+ quint16 reqWordsCounter = 1, shift = 0;
+ while(reqWordsCounter != requestSize){
+     TransactionHeader tr(request[reqWordsCounter]);
+     TransactionType type = TransactionType(tr.TypeID);
+     QVector<quint32> writeData = {};
+     quint32 address = request[reqWordsCounter + 1], ANDTerm = 0, ORTerm = 0;
+     switch(type){
+        case write:
+        case nonIncrementingWrite:{
+            for(size_t i = reqWordsCounter + 2; i < reqWordsCounter + 2 + tr.Words; ++i)
+                writeData.append(request[i]);
+            shift = 2 + tr.Words;
+            break;
+     }
+        case RMWbits:{
+            ANDTerm = request[reqWordsCounter + 2];
+            ORTerm = request[reqWordsCounter + 3];
+            shift = 4;
+            break;
+     }
+        case RMWsum:{
+            ANDTerm = request[reqWordsCounter + 2];
+            shift = 3;
+            break;
+     }
+        case read:
+        case nonIncrementingRead:{
+            shift = 2;
+            break;
+     }
+        default: break;
+     }
+     ui->treeWidget_REQUEST->addIPbusTransaction(type, tr.Words, address, &writeData, ANDTerm, ORTerm);
+     writeData.clear();
+     reqWordsCounter += shift;
+ }
+
 }
 
 quint8 MainWindow::amountOfActiveModules()
@@ -183,7 +229,7 @@ void MainWindow::selectedTransactionChanged(const TransactionType type){
 }
 
 void MainWindow::packetSizeChanged(){
-    const counter newAmount = ui->treeWidget_PACKET_VIEWER->packetSize(), expectedAmount = ui->treeWidget_PACKET_VIEWER->expectedResponseSize();
+    const counter newAmount = ui->treeWidget_REQUEST->packetSize(), expectedAmount = ui->treeWidget_REQUEST->expectedResponseSize();
     QProgressBar* request = ui->progressBar_WORDS, *response = ui->progressBar_WORDS_EXPECTED;
     changeProgressBar(request, newAmount);
     changeProgressBar(response, expectedAmount);
@@ -211,8 +257,8 @@ void MainWindow::maskChanged(QPushButton * const but)
 }
 
 void MainWindow::nWordsChanged(){
-    const counter currentFreeSpaceRequest = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->packetSize(),
-                  currentFreeSpaceResponse = maxWordsPerPacket - ui->treeWidget_PACKET_VIEWER->expectedResponseSize();
+    const counter currentFreeSpaceRequest = maxWordsPerPacket - ui->treeWidget_REQUEST->packetSize(),
+                  currentFreeSpaceResponse = maxWordsPerPacket - ui->treeWidget_REQUEST->expectedResponseSize();
     const quint8 currentNWords = static_cast<quint8>(ui->lineEdit_NWORDS->text().toUInt());
     const quint8 transactionsAmount = multiMode ? amountOfActiveModules() : 1;
     bool addButtonEnabled = true;
@@ -245,7 +291,7 @@ void MainWindow::sendPacket(){
     //Declaration of the variables numWord - counter of words in packet, transactionCounter - counter of transactions in the packet
     quint16 numWord = 0, transactionCounter = 0;
     //DInitialisation of requestViewer will let me write less code to apple QTreeWidget functions
-    packetViewer* requestViewer = ui->treeWidget_PACKET_VIEWER;
+    packetViewer* requestViewer = ui->treeWidget_REQUEST;
     //First element in packet is Packet header/ It is getting from the first child of the first item in tree
     request[numWord++] = requestViewer->topLevelItem(transactionCounter++)->text(0).split("x").at(1).left(8).toUInt(nullptr, 16);
     //while words amount in packet less than the building packet size
@@ -261,11 +307,12 @@ void MainWindow::sendPacket(){
     if(ui->lineEdit_IPADDRESS->text().contains(IP))
         socket->writeDatagram(Crequest, requestViewer->packetSize() * sizeof (IPbusWord), QHostAddress(ui->lineEdit_IPADDRESS->text()), 50001);
     else ui->statusbar->showMessage("No such address");
-    ui->treeWidget_PACKET_VIEWER->reinit();
+    ui->treeWidget_REQUEST->reinit();
     nWordsChanged();
 }
 
 void MainWindow::getResponse(){
+    qDebug() << response[0];
     //when we have pending datagram
     if(socket->hasPendingDatagrams()){
         //we get response size, to get coressponding amount of bytes from the packet, which we got
@@ -275,13 +322,13 @@ void MainWindow::getResponse(){
         //new packet should be displayed, so it's neccesarry to clear response viewer
         ui->treeWidget_RESPONSE->clear();
         //call function, which will display response to user
-        if(responseSize) ui->treeWidget_RESPONSE->displayResponse(response, responseSize / sizeof (IPbusWord), expanded, hiddenHeaders);
+        if(responseSize) ui->treeWidget_RESPONSE->showPacket(response, responseSize / sizeof (IPbusWord), expanded, hiddenHeaders);
     }
 }
 
 void MainWindow::clear(){
-    ui->treeWidget_PACKET_VIEWER->clear();
-    ui->treeWidget_PACKET_VIEWER->reinit();
+    ui->treeWidget_REQUEST->clear();
+    ui->treeWidget_REQUEST->reinit();
     nWordsChanged();
     ui->pushButton_SEND->setEnabled(false);
 }
@@ -321,6 +368,25 @@ void MainWindow::getConfiguration(){
 
     setMask(moduleMask);
     ui->pushButton_ADD->setEnabled(!multiMode || (moduleMask && multiMode));
+
+    settings.beginGroup("RESPONSE");
+    quint16 tmpSz = settings.value("Length", "0").toInt();
+    responseSize = tmpSz * sizeof(IPbusWord);
+    if(tmpSz)for(size_t i = 0; i < tmpSz; ++i){
+        response[i] = settings.value(QString::asprintf("%03d", i), "0").toString().toInt(nullptr, 16);
+    }
+    settings.endGroup();
+
+    if(tmpSz)ui->treeWidget_RESPONSE->showPacket(response, tmpSz, expanded, hiddenHeaders);
+
+    settings.beginGroup("REQUEST");
+    tmpSz = settings.value("Length", "0").toInt();
+    if(tmpSz)for(size_t i = 0; i < tmpSz; ++i){
+        request[i] = settings.value(QString::asprintf("%03d", i), "0").toString().toInt(nullptr, 16);
+    }
+    settings.endGroup();
+
+    makeRequestFromArray(tmpSz);
 }
 
 //take the last session values from GUI and store them into the file
@@ -346,6 +412,21 @@ void MainWindow::saveConfiguration(){
     settings.setValue("MultiMode"     , multiMode    );
     settings.setValue("Mask", QString::asprintf("%06X", moduleMask));
     settings.endGroup();
+
+    settings.beginGroup("RESPONSE");
+    settings.setValue("Length", ui->treeWidget_RESPONSE->packetSize());
+    for(size_t i = 0; i < ui->treeWidget_RESPONSE->packetSize(); ++i){
+        settings.setValue(QString::asprintf("%03d", i),  QString::asprintf("%X", response[i]));
+    }
+    settings.endGroup();
+
+    settings.beginGroup("REQUEST");
+    settings.setValue("Length", ui->treeWidget_REQUEST->packetSize());
+    for(size_t i = 0; i < ui->treeWidget_REQUEST->packetSize(); ++i){
+        settings.setValue(QString::asprintf("%03d", i), QString::asprintf("%X", request[i]));
+    }
+    settings.endGroup();
+
 }
 
 
@@ -367,7 +448,7 @@ void MainWindow::on_checkBox_removeHeaders_clicked(){
     ui->checkBox_expandAll->setEnabled(!hiddenHeaders);
 
     ui->treeWidget_RESPONSE->clear();
-    if(responseSize)ui->treeWidget_RESPONSE->displayResponse(response, responseSize / sizeof(IPbusWord), expanded, hiddenHeaders);
+    if(responseSize)ui->treeWidget_RESPONSE->showPacket(response, responseSize / sizeof(IPbusWord), expanded, hiddenHeaders);
 }
 
 

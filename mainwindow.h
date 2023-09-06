@@ -37,6 +37,7 @@ private:
     //become true after sending packet
     void setMultiMode(bool);
     void setMask(quint32);
+    void makeRequestFromArray(const quint16 requestSize);
 
     bool sendFlag = false;
     bool expanded = false;

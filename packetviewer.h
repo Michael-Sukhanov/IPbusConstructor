@@ -32,9 +32,9 @@ class packetViewer : public QTreeWidget
     Q_OBJECT
 public:
     packetViewer(QWidget *parent = nullptr, const QColor* pallete = colors);
-    void addIPbusPacketHeader();
+    void addIPbusPacketHeader(IPbusWord h = 0);
     void addIPbusTransaction(TransactionType type, const quint8 nWords, const IPbusWord address, const QVector<quint32>* writeData = nullptr, const IPbusWord ANDterm = 0, const IPbusWord ORterm = 0);
-    void displayResponse(IPbusWord * const response, const quint16 size, const bool expanded = false, const bool hiddenHeaders = false);
+    void showPacket(IPbusWord * const response, const quint16 size, const bool expanded = false, const bool hiddenHeaders = false);
 
     void expandAllTopLevelItems();
     void collapseAllTopLEvelItems();

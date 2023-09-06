@@ -36,11 +36,11 @@ packetViewer::packetViewer(QWidget* parent, const QColor* pallete):QTreeWidget(p
 }
 
 //add IPbus Header Item in tree
-void packetViewer::addIPbusPacketHeader(){
+void packetViewer::addIPbusPacketHeader(IPbusWord h){
     //all counters set to zero as only one packet is able
     this->packetWords = 0, this->transactions = 0; this->expectedWords = 0;
     //Create IPbus Packet Header
-    PacketHeader header = PacketHeader(control);
+    PacketHeader header = h ? PacketHeader(h) : PacketHeader(control);
     //Create parent Item with header
     QTreeWidgetItem* headerItem = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("   0x%08X: Packet header", quint32(header)), "", QString::number(this->packetWords++)}), true, pallete[6]);
     //This flag needed to show, that this item is not editable and drageble, but enabled for watching
@@ -93,7 +93,7 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
     emit wordsAmountChanged();
 }
 
-void packetViewer::displayResponse(IPbusWord * const response, const quint16 size, const bool expanded, const bool hiddenHeaders){
+void packetViewer::showPacket(IPbusWord * const response, const quint16 size, const bool expanded, const bool hiddenHeaders){
     itemsToHide.clear();
     QString erString;
     this->display = true;
@@ -133,25 +133,27 @@ void packetViewer::displayResponse(IPbusWord * const response, const quint16 siz
         if(hiddenHeaders){itemsToHide.append(packetHeader); itemsToHide.append(parent);}
 
         parent->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+
         switch(header.TypeID){
         case nonIncrementingRead:
         case read: {for(quint16 i = 0; i < header.Words; ++i)
-                        createNewTreeWidgetItem(hiddenHeaders ? nullptr : parent,
-                                                new QStringList({hexFormatFor(response[this->packetWords]),
-                                                QString::number(internalTransactionWords++),
-                                                QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
-                    break;}
+                    createNewTreeWidgetItem(hiddenHeaders ? nullptr : parent,
+                                              new QStringList({hexFormatFor(response[this->packetWords]),
+                                            QString::number(internalTransactionWords++),
+                                            QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+                break;}
         case RMWbits:
         case RMWsum:{if(header.Words)
                         createNewTreeWidgetItem(hiddenHeaders ? nullptr : parent,
-                                                new QStringList({hexFormatFor(response[this->packetWords]),
-                                                QString::number(internalTransactionWords++),
-                                                QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+                                            new QStringList({hexFormatFor(response[this->packetWords]),
+                                            QString::number(internalTransactionWords++),
+                                            QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
                     break;}
         case write:
         case nonIncrementingWrite:
         default: break;
         }
+
     }
     if(expanded) this->expandAllTopLevelItems();
     if(hiddenHeaders) hideHeaders();
