@@ -386,7 +386,7 @@ void MainWindow::getConfiguration(){
     }
     settings.endGroup();
 
-    makeRequestFromArray(tmpSz);
+    if(tmpSz)makeRequestFromArray(tmpSz);
 }
 
 //take the last session values from GUI and store them into the file
