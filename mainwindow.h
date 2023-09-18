@@ -51,7 +51,6 @@ private slots:
     void selectedTransactionChanged(const TransactionType type);
     void packetSizeChanged();
     void changeProgressBar(QProgressBar* const bar, const quint16 value);
-    void maskChanged(QPushButton* const);
 
     void nWordsChanged();
     void sendPacket();
@@ -62,7 +61,7 @@ private slots:
     void saveConfiguration();
 
     void on_checkBox_expandAll_clicked();
-    void on_checkBox_removeHeaders_clicked();
-    void on_checkBox_multiMode_clicked();
+    void on_checkBox_showHeaders_clicked(bool);
+    void on_MultipleTransactionsMode_clicked(bool);
 };
 #endif // MAINWINDOW_H

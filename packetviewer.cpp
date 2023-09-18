@@ -8,6 +8,7 @@ packetViewer::packetViewer(QWidget* parent, const QColor* pallete):QTreeWidget(p
     this->setFont(QFont("Consolas", 10));
     //to work with ontext menu
     this->setContextMenuPolicy(Qt::CustomContextMenu);
+    this->setColumnWidth(1,260);
     //validate text changes in item
     connect(this, &packetViewer::itemChanged, this, [=](QTreeWidgetItem *item, int col){
         if(item->parent() && !col)
@@ -153,8 +154,11 @@ void packetViewer::showPacket(IPbusWord * const response, const quint16 size, co
         case nonIncrementingWrite:
         default: break;
         }
-
     }
+//	foreach (auto i, this->findItems(".*", Qt::MatchRegExp)) {
+//		i->setTextAlignment(1, Qt::AlignRight);
+//		i->setTextAlignment(2, Qt::AlignRight);
+//	}
     if(expanded) this->expandAllTopLevelItems();
     if(hiddenHeaders) hideHeaders();
 }
@@ -219,13 +223,17 @@ void packetViewer::dropEvent(QDropEvent *event){
 
 //creates new Item and place it in tree. If level of item zero input parent = nullptr. Can be filled and colored according to arguments. returns pointer on created item.
 QTreeWidgetItem *packetViewer::createNewTreeWidgetItem(QTreeWidgetItem *parent, QStringList * const list, const bool needToColor, QColor color){
-    QTreeWidgetItem* item;
-    if(parent) item = new QTreeWidgetItem(parent);
-    else       item = new QTreeWidgetItem(this);
+	QTreeWidgetItem* item;// = new QTreeWidgetItem(parent ? parent );
+	if(parent) item = new QTreeWidgetItem(parent);
+	else       item = new QTreeWidgetItem(this);
+//	i->setTextAlignment(1, Qt::AlignRight);
+//	i->setTextAlignment(2, Qt::AlignRight);
     setText(item, list);
     if(needToColor) brushItem(item, color);
     item->setForeground(1, this->unediatble);
-    item->setForeground(2, this->unediatble);
+	item->setForeground(2, this->unediatble);
+	item->setTextAlignment(1, Qt::AlignRight);
+	item->setTextAlignment(2, Qt::AlignRight);
     return item;
 }
 

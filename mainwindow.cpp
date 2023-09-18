@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
     coresspondingTypes["RMWSUM"]  = RMWsum;
     coresspondingTypes["RMWBITS"] = RMWbits;
     socket = new QUdpSocket(this);
-
+    socket->setProxy(QNetworkProxy::NoProxy);
     writedata* window = new writedata(this);
 
     //find all radioButtons to connect them with onr slot
@@ -22,8 +22,15 @@ MainWindow::MainWindow(QWidget *parent)
         connect(but, &QRadioButton::clicked, this, [but, this](){selectedTransactionChanged(coresspondingTypes[but->objectName().remove("radioButton_")]);});
 
     QList<QPushButton *> maskButtons = ui->centralwidget->findChildren<QPushButton*>(QRegularExpression("pushButton_([01][0-9]|20)"));
-    foreach(QPushButton* but, maskButtons)
-        connect(but, &QPushButton::clicked, this, [but, this](){maskChanged(but);});
+    foreach(QPushButton* but, maskButtons) {
+        quint8 iBd = but->objectName().rightRef(2).toUShort();
+        but->setToolTip((iBd ? QString::asprintf("PM%c%d", iBd <= 10 ? 'A' : 'C', (iBd-1) % 10) : "TCM") + QString::asprintf(", base address: 0x%04hX", iBd*0x200));
+        connect(but, &QPushButton::clicked, this, [=]() {
+            moduleMask ^= 1 << iBd;
+            ui->pushButton_ADD->setEnabled(moduleMask);
+            nWordsChanged();
+        });
+    }
     //Adding transaction
     connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_REQUEST, [=](){
         if(!ui->checkBox_RANDOMIZE_DATA->isChecked() && (ui->radioButton_WRITE->isChecked() || ui->radioButton_NIWRITE->isChecked())){
@@ -81,8 +88,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->treeWidget_REQUEST->installEventFilter(this);
 
     //resize width of coloumns in appropriate form in the beginning of the program
-    ui->treeWidget_REQUEST->header()->resizeSection(0, 380);
-    ui->treeWidget_RESPONSE->header()->resizeSection(0, 380);
+	ui->treeWidget_REQUEST->header()->resizeSection(0, 330);
+	ui->treeWidget_RESPONSE->header()->resizeSection(0, 330);
     ui->treeWidget_REQUEST->header()->resizeSection(1, 40);
     ui->treeWidget_RESPONSE->header()->resizeSection(1, 40);
     ui->treeWidget_REQUEST->header()->resizeSection(2, 40);
@@ -137,12 +144,8 @@ bool MainWindow::eventFilter(QObject * obj, QEvent* event){
 
 void MainWindow::setMultiMode(bool on)
 {
-    foreach (QPushButton* but, ui->centralwidget->findChildren<QPushButton*>(QRegularExpression("pushButton_([01][0-9]|20)")))
-        but->setEnabled(on);
-    ui->label_A_modules->setEnabled(on);
-    ui->label_C_modules->setEnabled(on);
-    ui->label_TCM->setEnabled(on);
-    ui->pushButton_ADD->setEnabled(!multiMode || (moduleMask && multiMode));
+    foreach (QWidget *w, ui->MultipleTransactionsMode->findChildren<QWidget *>()) w->setEnabled(on);
+    ui->pushButton_ADD->setEnabled(!multiMode || moduleMask);
     ui->lineEdit_ADDRESS->setInputMask(on ? ">HHH" : ">HHHHHHHH");
     ui->lineEdit_ADDRESS->setValidator(on ? new QRegExpValidator(QRegExp("([10]?[0-9A-F]?[0-9A-F]?)"/*"|([0-9A-F][0-9A-F])|([0-9A-F])"*/)) : new QRegExpValidator(nullptr));
     nWordsChanged();
@@ -159,55 +162,44 @@ void MainWindow::setMask(quint32 mask)
 
 void MainWindow::makeRequestFromArray(const quint16 requestSize)
 {
- ui->treeWidget_REQUEST->addIPbusPacketHeader(request[0]);
- quint16 reqWordsCounter = 1, shift = 0;
- while(reqWordsCounter != requestSize){
-     TransactionHeader tr(request[reqWordsCounter]);
-     TransactionType type = TransactionType(tr.TypeID);
-     QVector<quint32> writeData = {};
-     quint32 address = request[reqWordsCounter + 1], ANDTerm = 0, ORTerm = 0;
-     switch(type){
+    ui->treeWidget_REQUEST->addIPbusPacketHeader(request[0]);
+    quint16 reqWordsCounter = 1, shift = 0;
+    while(reqWordsCounter < requestSize){
+        TransactionHeader tr(request[reqWordsCounter]);
+        TransactionType type = TransactionType(tr.TypeID);
+        QVector<quint32> writeData = {};
+        quint32 address = request[reqWordsCounter + 1], ANDTerm = 0, ORTerm = 0;
+        switch(type){
         case write:
         case nonIncrementingWrite:{
             for(size_t i = reqWordsCounter + 2; i < reqWordsCounter + 2 + tr.Words; ++i)
                 writeData.append(request[i]);
             shift = 2 + tr.Words;
             break;
-     }
+        }
         case RMWbits:{
             ANDTerm = request[reqWordsCounter + 2];
             ORTerm = request[reqWordsCounter + 3];
             shift = 4;
             break;
-     }
+        }
         case RMWsum:{
             ANDTerm = request[reqWordsCounter + 2];
             shift = 3;
             break;
-     }
+        }
         case read:
         case nonIncrementingRead:{
             shift = 2;
             break;
-     }
+        }
         default: break;
-     }
-     ui->treeWidget_REQUEST->addIPbusTransaction(type, tr.Words, address, &writeData, ANDTerm, ORTerm);
-     writeData.clear();
-     reqWordsCounter += shift;
- }
-
-}
-
-quint8 MainWindow::amountOfActiveModules()
-{
-    quint32 tmp = moduleMask;
-    quint8 retValue = 0;
-    while(tmp){
-        tmp &= (tmp - 1);
-        ++retValue;
+        }
+        ui->treeWidget_REQUEST->addIPbusTransaction(type, tr.Words, address, &writeData, ANDTerm, ORTerm);
+        writeData.clear();
+        reqWordsCounter += shift;
     }
-    return retValue;
+
 }
 
 MainWindow::~MainWindow(){
@@ -245,22 +237,11 @@ void MainWindow::changeProgressBar(QProgressBar * const bar, const quint16 value
     bar->setValue(value);
 }
 
-void MainWindow::maskChanged(QPushButton * const but)
-{
-    quint8 pos = but->objectName().right(2).toInt();
-    if(but->isChecked())
-        moduleMask |= 1 << pos;
-    else
-        moduleMask ^= 1 << pos;
-    ui->pushButton_ADD->setEnabled(!multiMode || (moduleMask && multiMode));
-    nWordsChanged();
-}
-
 void MainWindow::nWordsChanged(){
     const counter currentFreeSpaceRequest = maxWordsPerPacket - ui->treeWidget_REQUEST->packetSize(),
                   currentFreeSpaceResponse = maxWordsPerPacket - ui->treeWidget_REQUEST->expectedResponseSize();
     const quint8 currentNWords = static_cast<quint8>(ui->lineEdit_NWORDS->text().toUInt());
-    const quint8 transactionsAmount = multiMode ? amountOfActiveModules() : 1;
+    const quint8 transactionsAmount = multiMode ? std::popcount(moduleMask) : 1;
     bool addButtonEnabled = true;
     switch (currentType) {
     case read:
@@ -283,7 +264,9 @@ void MainWindow::nWordsChanged(){
         break;
     default: break;
     }
-    ui->pushButton_ADD->setEnabled(addButtonEnabled);
+    ui->pushButton_ADD->setEnabled(addButtonEnabled && (!multiMode || moduleMask));
+    if (transactionsAmount > 1) ui->pushButton_ADD->setText(QString("Add %1 transactions").arg(transactionsAmount));
+    else ui->pushButton_ADD->setText("Add transaction");
 }
 
 void MainWindow::sendPacket(){
@@ -304,15 +287,21 @@ void MainWindow::sendPacket(){
             request[numWord++] = parentTransaction->child(i)->text(0).toUInt(nullptr, 16);
     }
     //After our packet was filled we send it to server
-    if(ui->lineEdit_IPADDRESS->text().contains(IP))
+    if(ui->lineEdit_IPADDRESS->text().contains(IP)) {
+        ui->lineEdit_IPADDRESS->setStyleSheet("");
         socket->writeDatagram(Crequest, requestViewer->packetSize() * sizeof (IPbusWord), QHostAddress(ui->lineEdit_IPADDRESS->text()), 50001);
-    else ui->statusbar->showMessage("No such address");
+    }
+    else {
+//        ui->statusbar->showMessage("No such address");
+        ui->lineEdit_IPADDRESS->setText("Incorrect address!");
+        ui->lineEdit_IPADDRESS->setStyleSheet("background-color: rgba(255,0,0,0.5);");
+    }
     ui->treeWidget_REQUEST->reinit();
     nWordsChanged();
 }
 
 void MainWindow::getResponse(){
-    qDebug() << response[0];
+//    qDebug() << response[0];
     //when we have pending datagram
     if(socket->hasPendingDatagrams()){
         //we get response size, to get coressponding amount of bytes from the packet, which we got
@@ -358,16 +347,16 @@ void MainWindow::getConfiguration(){
     settings.endGroup();
 
 
-    ui->checkBox_expandAll    ->setChecked(expanded      ); //1)
-    ui->checkBox_removeHeaders->setChecked(hiddenHeaders ); //2)
-    ui->checkBox_multiMode    ->setChecked(multiMode     ); //3)
+    ui->checkBox_expandAll      ->setChecked(expanded      ); //1)
+    ui->checkBox_showHeaders    ->setChecked(!hiddenHeaders); //2)
+    ui->MultipleTransactionsMode->setChecked(multiMode     ); //3)
 
     ui->checkBox_expandAll    ->setEnabled(!hiddenHeaders);//2)
 
     setMultiMode(multiMode); //3)
 
     setMask(moduleMask);
-    ui->pushButton_ADD->setEnabled(!multiMode || (moduleMask && multiMode));
+    ui->pushButton_ADD->setEnabled(!multiMode || moduleMask);
 
     settings.beginGroup("RESPONSE");
     quint16 tmpSz = settings.value("Length", "0").toInt();
@@ -377,7 +366,9 @@ void MainWindow::getConfiguration(){
     }
     settings.endGroup();
 
+
     if(tmpSz)ui->treeWidget_RESPONSE->showPacket(response, tmpSz, expanded, hiddenHeaders);
+
 
     settings.beginGroup("REQUEST");
     tmpSz = settings.value("Length", "0").toInt();
@@ -441,20 +432,13 @@ void MainWindow::on_checkBox_expandAll_clicked()
 }
 
 
-void MainWindow::on_checkBox_removeHeaders_clicked(){
+void MainWindow::on_checkBox_showHeaders_clicked(bool checked){
 
-    hiddenHeaders = ui->checkBox_removeHeaders->isChecked();
-
+    hiddenHeaders = !checked;
     ui->checkBox_expandAll->setEnabled(!hiddenHeaders);
-
     ui->treeWidget_RESPONSE->clear();
     if(responseSize)ui->treeWidget_RESPONSE->showPacket(response, responseSize / sizeof(IPbusWord), expanded, hiddenHeaders);
 }
 
 
-void MainWindow::on_checkBox_multiMode_clicked()
-{
-    multiMode = ui->checkBox_multiMode->isChecked();
-    setMultiMode(multiMode);
-}
-
+void MainWindow::on_MultipleTransactionsMode_clicked(bool checked) { setMultiMode(multiMode = checked); }
