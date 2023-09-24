@@ -79,13 +79,13 @@ struct TransactionHeader {
     }
     QString typeIDString(){
         switch (TypeID) {
-            case read:                 return "Read";
-            case write:                return "Write";
-            case nonIncrementingRead:  return "Non Incrementing Read";
-            case nonIncrementingWrite: return "Non Incrementing Write";
-            case RMWbits:              return "RMWbits";
-            case RMWsum:               return "RMWsum";
-            default:                   return "unknown";
+			case read:                 return "Read             ";
+			case write:                return "Write            ";
+			case nonIncrementingRead:  return "Read  (non-incr.)";
+			case nonIncrementingWrite: return "Write (non-incr.)";
+			case RMWbits:              return "RMWbits          ";
+			case RMWsum:               return "RMWsum           ";
+			default:                   return " !!! unknown !!! ";
         }
     }
 };

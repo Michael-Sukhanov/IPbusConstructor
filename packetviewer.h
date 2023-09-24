@@ -43,7 +43,7 @@ public:
 
     void reinit();
 
-    const QColor* getPallete(){return this->pallete;}
+	const QColor* getPallete(){return this->palette;}
     counter packetSize(){return this->packetWords;}
     counter expectedResponseSize(){return this->expectedWords;}
     counter transactionsAmount(){return this->transactions;}
@@ -57,7 +57,7 @@ protected:
 private:
     bool display = false;
     //pallete to color the header items of the tree elements
-    const QColor* pallete;
+	const QColor* palette;
     const QColor unediatble = QColor("#474747");
 
     QClipboard *clipboard = QApplication::clipboard();
@@ -84,7 +84,7 @@ private:
     QList<QTreeWidgetItem*> itemsSort(const QList<QTreeWidgetItem*> Itemlist);
     QList<QTreeWidgetItem*> itemsToHide;
     void copyWholePacket();
-    void preapreMenu(const QPoint& pos);
+	void prepareMenu(const QPoint& pos);
     bool errorTransaction(TransactionHeader header, QString& erInfo);
     QList<QTreeWidgetItem*> getExpandebleItems();
 

@@ -4,7 +4,7 @@ packetViewer::packetViewer(QWidget* parent, const QColor* pallete):QTreeWidget(p
     transactions(0), packetWords(0), expectedWords(0){
     this->setAcceptDrops(true);
     this->setDragEnabled(true);
-    this->pallete = pallete;
+	this->palette = pallete;
     this->setFont(QFont("Consolas", 10));
     //to work with ontext menu
     this->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -33,7 +33,7 @@ packetViewer::packetViewer(QWidget* parent, const QColor* pallete):QTreeWidget(p
            copyWholePacket();
        }
     });
-    connect(this, &QTreeWidget::customContextMenuRequested, this, &packetViewer::preapreMenu);
+	connect(this, &QTreeWidget::customContextMenuRequested, this, &packetViewer::prepareMenu);
 }
 
 //add IPbus Header Item in tree
@@ -43,7 +43,7 @@ void packetViewer::addIPbusPacketHeader(IPbusWord h){
     //Create IPbus Packet Header
     PacketHeader header = h ? PacketHeader(h) : PacketHeader(control);
     //Create parent Item with header
-    QTreeWidgetItem* headerItem = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("   0x%08X: Packet header", quint32(header)), "", QString::number(this->packetWords++)}), true, pallete[6]);
+	QTreeWidgetItem* headerItem = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf(" 0x%08X: Packet header", quint32(header)), "", QString::number(this->packetWords++)}), true, palette[6]);
     //This flag needed to show, that this item is not editable and drageble, but enabled for watching
     headerItem->setFlags(Qt::ItemIsEnabled);
     ++expectedWords;
@@ -51,14 +51,16 @@ void packetViewer::addIPbusPacketHeader(IPbusWord h){
 
 //add IPbusTransaction to the tree
 void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords, const IPbusWord address, const QVector<quint32>* wordData, const IPbusWord ANDterm, const IPbusWord ORterm){
-    counter internalTransactionWords = 0;
+	counter internalTransactionWords = 0;
     TransactionHeader header = TransactionHeader(type, nWords, transactions);
     //Creating transaction item
     QTreeWidgetItem* headerItem = createNewTreeWidgetItem(nullptr,
-                                      new QStringList({QString::asprintf("[%u]0x%08X: %s %u word%s", transactions++, quint32(header),
-                                                       header.typeIDString().toUtf8().data(), header.Words, (header.Words % 10 == 1 ? "" : "s")), "", QString::number(packetWords++)}),/*counter transactions go forward*/
-                                      true, pallete[type]);                                                                                                                          /*as it counts amount of transactions*/
-    //Creating address item, common for all transactions                                                                                                  /*counters packet words and internal words go forward*/
+									  new QStringList({QString::asprintf(" 0x%08X: %s %3u word%s", quint32(header),
+													   header.typeIDString().toUtf8().data(), header.Words, (header.Words == 1 ? " " : "s")),
+													   QString::asprintf("t№%3d", transactions++),
+													   QString::number(packetWords++)}),/*counter transactions go forward*/
+									  true, palette[type]);								/*as it counts amount of transactions*/
+	//Creating address item, common for all transactions                                /*counters packet words and internal words go forward*/
     QTreeWidgetItem* addressItem = createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(address), "addr", QString::number(packetWords++)})); /*as here we fill transaction*/
     addressItem->setForeground(0, Qt::blue);
     addressItem->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
@@ -99,7 +101,7 @@ void packetViewer::showPacket(IPbusWord * const response, const quint16 size, co
     QString erString;
     this->display = true;
     this->transactions = 0; this->packetWords = 0;
-    QTreeWidgetItem* packetHeader = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf("   0x%08X: Packet header", response[0]), "", QString::number(this->packetWords++)}), true, pallete[6]);
+	QTreeWidgetItem* packetHeader = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf(" 0x%08X: Packet header", response[0]), "", QString::number(this->packetWords++)}), true, palette[6]);
     packetHeader->setFlags(Qt::ItemIsEnabled);
     while(this->packetWords < size){
         quint16 internalTransactionWords = 0;
@@ -107,26 +109,24 @@ void packetViewer::showPacket(IPbusWord * const response, const quint16 size, co
         QTreeWidgetItem* parent;
         if(errorTransaction(header, erString))
             parent = createNewTreeWidgetItem(nullptr,
-                                             new QStringList({QString::asprintf("[%u]0x%08X: %s",
-                                                                       transactions,
+											 new QStringList({QString::asprintf(" 0x%08X: %s",
                                                                        quint32(header),
                                                                        erString.toUtf8().data()),
-                                                                       "",
+																	   QString::asprintf("t№%3d", transactions),
                                                                        QString::number(this->packetWords)}),
                                              true,
-                                             pallete[header.TypeID]);
+											 palette[header.TypeID]);
         else
             parent = createNewTreeWidgetItem(nullptr,
-                                             new QStringList({QString::asprintf("[%u]0x%08X: %s %u word%s",
-                                                              transactions,
+											 new QStringList({QString::asprintf(" 0x%08X: %s %3u word%s",
                                                               quint32(header),
                                                               header.typeIDString().toUtf8().data(),
                                                               header.Words,
-                                                              (header.Words % 10 == 1 ? "" : "s")),
-                                                              "",
+															  (header.Words == 1 ? " " : "s")),
+															  QString::asprintf("t№%3d", transactions),
                                                               QString::number(this->packetWords)}),
                                              true,
-                                             pallete[header.TypeID]);
+											 palette[header.TypeID]);
 
         this->packetWords++;
         transactions++;
@@ -155,10 +155,6 @@ void packetViewer::showPacket(IPbusWord * const response, const quint16 size, co
         default: break;
         }
     }
-//	foreach (auto i, this->findItems(".*", Qt::MatchRegExp)) {
-//		i->setTextAlignment(1, Qt::AlignRight);
-//		i->setTextAlignment(2, Qt::AlignRight);
-//	}
     if(expanded) this->expandAllTopLevelItems();
     if(hiddenHeaders) hideHeaders();
 }
@@ -190,7 +186,7 @@ void packetViewer::reinit(){
     this->transactions = 0;
     this->packetWords = this->topLevelItem(0) ? 1 : 0;
     this->expectedWords = this->topLevelItem(0) ? 1 : 0;
-    QList<QTreeWidgetItem*> transactions = this->findItems("[", Qt::MatchContains);
+	QList<QTreeWidgetItem*> transactions = this->findItems("t", Qt::MatchStartsWith, 1);
     if(!transactions.isEmpty())
         for(quint16 i = 0; i < transactions.size(); ++i)
             changeTransactionPosition(transactions.at(i), this->transactions++, this->packetWords);
@@ -226,8 +222,6 @@ QTreeWidgetItem *packetViewer::createNewTreeWidgetItem(QTreeWidgetItem *parent, 
 	QTreeWidgetItem* item;// = new QTreeWidgetItem(parent ? parent );
 	if(parent) item = new QTreeWidgetItem(parent);
 	else       item = new QTreeWidgetItem(this);
-//	i->setTextAlignment(1, Qt::AlignRight);
-//	i->setTextAlignment(2, Qt::AlignRight);
     setText(item, list);
     if(needToColor) brushItem(item, color);
     item->setForeground(1, this->unediatble);
@@ -239,7 +233,7 @@ QTreeWidgetItem *packetViewer::createNewTreeWidgetItem(QTreeWidgetItem *parent, 
 
 //returns string with IPbus word in Hex readable format
 QString packetViewer::hexFormatFor(const IPbusWord word){
-    return QString::asprintf("0x%08X", word);
+	return QString::asprintf("0x%08X", word);
 }
 
 //return validated string in case of changing word in Tree widget
@@ -251,7 +245,7 @@ QString packetViewer::hexFormatFor(QString word){
         word.prepend(QString("0").repeated(usefulPositions - word.size()));
     else if(word.size() > usefulPositions)
             word.remove(0, word.size() - usefulPositions);
-    return word.replace(QRegExp("[^0-9a-fA-F]"), "0").toUpper().prepend("0x");
+	return word.replace(QRegExp("[^0-9a-fA-F]"), "0").toUpper().prepend("0x");
 }
 
 //brush an Item in specified color
@@ -273,8 +267,10 @@ void packetViewer::changeTransactionPosition(QTreeWidgetItem * const headerItem,
     //Change header item text
     TransactionHeader header = static_cast<quint32>(headerItem->text(0).split('x').at(1).left(8).toUInt(nullptr, 16));
     header.TransactionID = transactionNo;
-    setText(headerItem, new QStringList({QString::asprintf("[%u]0x%08X: %s %u word%s", transactionNo, quint32(header),
-                                         header.typeIDString().toUtf8().data(), header.Words, (header.Words % 10 == 1 ? "" : "s")), "", QString::number(packetWordNo++)}));
+	setText(headerItem, new QStringList({QString::asprintf(" 0x%08X: %s %3u word%s", quint32(header),
+										 header.typeIDString().toUtf8().data(), header.Words, (header.Words == 1 ? " " : "s")),
+										 QString::asprintf("t№%3d", transactionNo),
+										 QString::number(packetWordNo++)}));
     this->expectedWords++;
     //amount of expected words is changing too
     switch(header.TypeID){
@@ -322,9 +318,9 @@ void packetViewer::copyWholePacket(){
     clipboard->setText(message);
 }
 
-void packetViewer::preapreMenu(const QPoint &pos){
+void packetViewer::prepareMenu(const QPoint &pos){
     auto item = this->itemAt(pos);
-    if(!item || !item->text(0).contains('[')) return;
+	if(!item || !item->text(1).startsWith('t')) return;
     if(this->display && (item->text(0).contains("Writ"))) return;
     if(!this->display && (item->text(0).contains("Rea"))) return;
 

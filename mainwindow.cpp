@@ -77,8 +77,6 @@ MainWindow::MainWindow(QWidget *parent)
         }else
             ui->treeWidget_REQUEST->addIPbusTransaction(currentType, nWords, address, &this->writeData);
         nWordsChanged();
-//        ui->treeWidget_PACKET_VIEWER->addIPbusTransaction(currentType, nWords, address, &this->writeData);
-//        nWordsChanged();
         this->writeData.clear();});
 
     ui->lineEdit_NWORDS->setValidator(new QRegExpValidator(QRegExp("[1-9]|[1-9][0-9]|1[0-9]{1,2}|2[0-4][0-9]|25[0-5]")));
@@ -88,17 +86,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->treeWidget_REQUEST->installEventFilter(this);
 
     //resize width of coloumns in appropriate form in the beginning of the program
-	ui->treeWidget_REQUEST->header()->resizeSection(0, 330);
-	ui->treeWidget_RESPONSE->header()->resizeSection(0, 330);
-    ui->treeWidget_REQUEST->header()->resizeSection(1, 40);
-    ui->treeWidget_RESPONSE->header()->resizeSection(1, 40);
-    ui->treeWidget_REQUEST->header()->resizeSection(2, 40);
-    ui->treeWidget_RESPONSE->header()->resizeSection(2, 40);
-
-
-    //setting font for bars -- kostyl
-    ui->progressBar_WORDS->setFont(QFont("FranklinGothic", 12));
-    ui->progressBar_WORDS_EXPECTED->setFont(QFont("FranklinGothic", 12));
+	ui->treeWidget_REQUEST ->header()->resizeSection(0, 310);
+	ui->treeWidget_RESPONSE->header()->resizeSection(0, 310);
+	ui->treeWidget_REQUEST ->header()->resizeSection(1,  42);
+	ui->treeWidget_RESPONSE->header()->resizeSection(1,  42);
+	ui->treeWidget_REQUEST ->header()->resizeSection(2,  40);
+	ui->treeWidget_RESPONSE->header()->resizeSection(2,  40);
 
     //hiding in initialisation
     ui->lineEdit_ANDTERM->hide();
@@ -146,8 +139,14 @@ void MainWindow::setMultiMode(bool on)
 {
     foreach (QWidget *w, ui->MultipleTransactionsMode->findChildren<QWidget *>()) w->setEnabled(on);
     ui->pushButton_ADD->setEnabled(!multiMode || moduleMask);
-    ui->lineEdit_ADDRESS->setInputMask(on ? ">HHH" : ">HHHHHHHH");
-    ui->lineEdit_ADDRESS->setValidator(on ? new QRegExpValidator(QRegExp("([10]?[0-9A-F]?[0-9A-F]?)"/*"|([0-9A-F][0-9A-F])|([0-9A-F])"*/)) : new QRegExpValidator(nullptr));
+	if (on) {
+		quint32 a = ui->lineEdit_ADDRESS->text().toUInt(nullptr, 16);
+		ui->lineEdit_ADDRESS->setInputMask(">BHH");
+		ui->lineEdit_ADDRESS->setText(QString::asprintf("%03X", a & 0x1FF));
+	} else {
+		ui->lineEdit_ADDRESS->setInputMask(">HHHHHHHH");
+		ui->lineEdit_ADDRESS->setText("00000" + ui->lineEdit_ADDRESS->text().left(3));
+	}
     nWordsChanged();
 }
 
@@ -162,8 +161,8 @@ void MainWindow::setMask(quint32 mask)
 
 void MainWindow::makeRequestFromArray(const quint16 requestSize)
 {
-    ui->treeWidget_REQUEST->addIPbusPacketHeader(request[0]);
-    quint16 reqWordsCounter = 1, shift = 0;
+	ui->treeWidget_REQUEST->addIPbusPacketHeader(request[0]);
+	quint16 reqWordsCounter = 1, shift = 0;
     while(reqWordsCounter < requestSize){
         TransactionHeader tr(request[reqWordsCounter]);
         TransactionType type = TransactionType(tr.TypeID);
@@ -193,7 +192,7 @@ void MainWindow::makeRequestFromArray(const quint16 requestSize)
             shift = 2;
             break;
         }
-        default: break;
+		default: return;
         }
         ui->treeWidget_REQUEST->addIPbusTransaction(type, tr.Words, address, &writeData, ANDTerm, ORTerm);
         writeData.clear();
@@ -269,7 +268,7 @@ void MainWindow::nWordsChanged(){
     else ui->pushButton_ADD->setText("Add transaction");
 }
 
-void MainWindow::sendPacket(){
+void MainWindow::preparePacket(){
     ui->treeWidget_RESPONSE->clear();
     //Declaration of the variables numWord - counter of words in packet, transactionCounter - counter of transactions in the packet
     quint16 numWord = 0, transactionCounter = 0;
@@ -286,13 +285,15 @@ void MainWindow::sendPacket(){
         for(quint16 i = 0; i < parentTransaction->childCount(); ++i)
             request[numWord++] = parentTransaction->child(i)->text(0).toUInt(nullptr, 16);
     }
+}
+
+void MainWindow::sendPacket(){
+	preparePacket();
     //After our packet was filled we send it to server
-    if(ui->lineEdit_IPADDRESS->text().contains(IP)) {
+	if (ui->lineEdit_IPADDRESS->text().contains(IP)) {
         ui->lineEdit_IPADDRESS->setStyleSheet("");
-        socket->writeDatagram(Crequest, requestViewer->packetSize() * sizeof (IPbusWord), QHostAddress(ui->lineEdit_IPADDRESS->text()), 50001);
-    }
-    else {
-//        ui->statusbar->showMessage("No such address");
+		socket->writeDatagram(Crequest, ((packetViewer *)ui->treeWidget_REQUEST)->packetSize() * sizeof(IPbusWord), QHostAddress(ui->lineEdit_IPADDRESS->text()), 50001);
+	} else {
         ui->lineEdit_IPADDRESS->setText("Incorrect address!");
         ui->lineEdit_IPADDRESS->setStyleSheet("background-color: rgba(255,0,0,0.5);");
     }
@@ -359,31 +360,28 @@ void MainWindow::getConfiguration(){
     ui->pushButton_ADD->setEnabled(!multiMode || moduleMask);
 
     settings.beginGroup("RESPONSE");
-    quint16 tmpSz = settings.value("Length", "0").toInt();
+	quint16 tmpSz = settings.value("Length", 0).toUInt();
     responseSize = tmpSz * sizeof(IPbusWord);
     if(tmpSz)for(size_t i = 0; i < tmpSz; ++i){
-        response[i] = settings.value(QString::asprintf("%03d", i), "0").toString().toInt(nullptr, 16);
+		response[i] = settings.value(QString::asprintf("%03d", i), "0").toString().toUInt(nullptr, 16);
     }
     settings.endGroup();
-
-
     if(tmpSz)ui->treeWidget_RESPONSE->showPacket(response, tmpSz, expanded, hiddenHeaders);
 
-
     settings.beginGroup("REQUEST");
-    tmpSz = settings.value("Length", "0").toInt();
+	tmpSz = settings.value("Length", 0).toUInt();
     if(tmpSz)for(size_t i = 0; i < tmpSz; ++i){
-        request[i] = settings.value(QString::asprintf("%03d", i), "0").toString().toInt(nullptr, 16);
+		request[i] = settings.value(QString::asprintf("%03d", i), "0").toString().toUInt(nullptr, 16);
     }
     settings.endGroup();
-
-    if(tmpSz)makeRequestFromArray(tmpSz);
+	if(tmpSz)makeRequestFromArray(tmpSz); else foreach(auto w, QList<QProgressBar *>({ui->progressBar_WORDS, ui->progressBar_WORDS_EXPECTED})) w->setValue(0);
 }
 
 //take the last session values from GUI and store them into the file
 void MainWindow::saveConfiguration(){
+	preparePacket();
     QSettings settings(QCoreApplication::applicationName() + ".ini", QSettings::IniFormat);
-
+	settings.clear();
     settings.beginGroup("Network");
     settings.setValue("TargetIP", ui->lineEdit_IPADDRESS->text());
     settings.endGroup();

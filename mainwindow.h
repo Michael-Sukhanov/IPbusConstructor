@@ -27,7 +27,7 @@ protected:
 
 private:
     QUdpSocket* socket;
-    IPbusWord request[maxWordsPerPacket], response[maxWordsPerPacket];
+	IPbusWord request[maxWordsPerPacket] = {0}, response[maxWordsPerPacket] = {0};
     char* const Crequest = reinterpret_cast<char*>(request), * const Cresponse = reinterpret_cast<char*>(response);
     quint16 responseSize = 0;
     Ui::MainWindow *ui;
@@ -53,7 +53,8 @@ private slots:
     void changeProgressBar(QProgressBar* const bar, const quint16 value);
 
     void nWordsChanged();
-    void sendPacket();
+	void preparePacket();
+	void sendPacket();
     void getResponse();
     void clear();
 
