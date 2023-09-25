@@ -269,11 +269,11 @@ void MainWindow::nWordsChanged(){
 }
 
 void MainWindow::preparePacket(){
-    ui->treeWidget_RESPONSE->clear();
     //Declaration of the variables numWord - counter of words in packet, transactionCounter - counter of transactions in the packet
     quint16 numWord = 0, transactionCounter = 0;
     //DInitialisation of requestViewer will let me write less code to apple QTreeWidget functions
     packetViewer* requestViewer = ui->treeWidget_REQUEST;
+	if (requestViewer->topLevelItemCount() == 0) return;
     //First element in packet is Packet header/ It is getting from the first child of the first item in tree
     request[numWord++] = requestViewer->topLevelItem(transactionCounter++)->text(0).split("x").at(1).left(8).toUInt(nullptr, 16);
     //while words amount in packet less than the building packet size
@@ -289,6 +289,7 @@ void MainWindow::preparePacket(){
 
 void MainWindow::sendPacket(){
 	preparePacket();
+	ui->treeWidget_RESPONSE->clear();
     //After our packet was filled we send it to server
 	if (ui->lineEdit_IPADDRESS->text().contains(IP)) {
         ui->lineEdit_IPADDRESS->setStyleSheet("");
