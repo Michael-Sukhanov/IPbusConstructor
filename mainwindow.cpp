@@ -86,8 +86,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->treeWidget_REQUEST->installEventFilter(this);
 
     //resize width of coloumns in appropriate form in the beginning of the program
-	ui->treeWidget_REQUEST ->header()->resizeSection(0, 310);
-	ui->treeWidget_RESPONSE->header()->resizeSection(0, 310);
+	ui->treeWidget_REQUEST ->header()->resizeSection(0, 309);
+	ui->treeWidget_RESPONSE->header()->resizeSection(0, 309);
 	ui->treeWidget_REQUEST ->header()->resizeSection(1,  42);
 	ui->treeWidget_RESPONSE->header()->resizeSection(1,  42);
 	ui->treeWidget_REQUEST ->header()->resizeSection(2,  40);
