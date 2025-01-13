@@ -33,7 +33,16 @@ private:
     Ui::MainWindow *ui;
     QVector<quint32> writeData;
     TransactionType currentType = read;
-    QHash<QString, TransactionType> coresspondingTypes;
+    QHash<QString, TransactionType> coresspondingTypes = {
+        {"READ"   , read                },
+        {"WRITE"  ,	write               },
+        {"NIREAD" , nonIncrementingRead },
+        {"NIWRITE", nonIncrementingWrite},
+        {"RMWSUM" , RMWsum              },
+        {"RMWBITS", RMWbits             },
+        {"CSREAD" , cfgSpaceRead        },
+        {"CSWRITE", cfgSpaceWrite       }
+    };
     //become true after sending packet
     void setMultiMode(bool);
     void setMask(quint32);

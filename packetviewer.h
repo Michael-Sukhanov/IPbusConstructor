@@ -18,10 +18,12 @@ const QColor colors[] = {QColor("#DDDAE7"), //read
                          QColor("#CFDBBD"), //nonIncrementingWrite
                          QColor("#FDFBD8"), //RMWbits
                          QColor("#FFEED6"), //RMWsum
+                         QColor("#BFD3F2"), //cfgSpaceRead
+                         QColor("#F5D3E0"), //cfgSpaceWrite
                          QColor("#FFADAD")};//Packet Header
 
 
-const quint16 maxWordsPerPacket = 368;
+const quint16 maxWordsPerPacket = 2037; //368 for MTU 1500
 
 
 using  IPbusWord = quint32;
@@ -68,7 +70,7 @@ private:
     QShortcut* copyShortcut = new QShortcut(QKeySequence("Ctrl+C"), this, nullptr, nullptr, Qt::WidgetShortcut);
 
     QTreeWidgetItem* createNewTreeWidgetItem(QTreeWidgetItem* parent, QStringList* const list = new QStringList{"???", "???", "???"},
-                                             const bool needToColor = false, QColor color = colors[6]);
+                                             const bool needToColor = false, QColor color = colors[8]);
 
     QString hexFormatFor(const IPbusWord);
     QString hexFormatFor(QString);
