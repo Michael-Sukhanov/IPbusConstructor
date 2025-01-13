@@ -397,7 +397,7 @@ unchecked: show data only</string>
       <property name="title">
        <string/>
       </property>
-      <widget class="QLabel" name="label_7">
+      <widget class="QLabel" name="label_IPaddress">
        <property name="geometry">
         <rect>
          <x>702</x>
@@ -422,23 +422,23 @@ unchecked: show data only</string>
       <widget class="QLineEdit" name="lineEdit_IPADDRESS">
        <property name="geometry">
         <rect>
-         <x>632</x>
+         <x>682</x>
          <y>30</y>
-         <width>191</width>
+         <width>141</width>
          <height>20</height>
         </rect>
        </property>
        <property name="font">
         <font>
          <family>Consolas</family>
-         <pointsize>14</pointsize>
+         <pointsize>13</pointsize>
         </font>
        </property>
        <property name="inputMask">
         <string/>
        </property>
        <property name="text">
-        <string>127.0.0.1</string>
+        <string>255.255.255.255</string>
        </property>
        <property name="maxLength">
         <number>32767</number>
@@ -1488,6 +1488,125 @@ unchecked: show data only</string>
         <property name="spacing">
          <number>2</number>
         </property>
+        <item row="4" column="1">
+         <widget class="QRadioButton" name="radioButton_CSWRITE">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>15</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <family>Franklin Gothic Medium</family>
+            <pointsize>11</pointsize>
+            <stylestrategy>PreferAntialias</stylestrategy>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Configuration space registers&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: #F5D3E0;
+color: rgb(0, 0, 0);</string>
+          </property>
+          <property name="text">
+           <string>CS Write</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QRadioButton" name="radioButton_RMWSUM">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>15</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <family>Franklin Gothic Medium</family>
+            <pointsize>11</pointsize>
+            <stylestrategy>PreferAntialias</stylestrategy>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>Increment regvalue by given number</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: rgb(0, 0, 0);
+background-color: rgb(255, 238, 214);
+</string>
+          </property>
+          <property name="text">
+           <string>RMWsum</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QRadioButton" name="radioButton_CSREAD">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>15</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <family>Franklin Gothic Medium</family>
+            <pointsize>11</pointsize>
+            <stylestrategy>PreferAntialias</stylestrategy>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Configuration space registers&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: rgb(0,0,0);
+background-color: #BFD3F2;
+</string>
+          </property>
+          <property name="text">
+           <string>CS Read</string>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="0">
          <widget class="QRadioButton" name="radioButton_READ">
           <property name="sizePolicy">
@@ -1499,7 +1618,7 @@ unchecked: show data only</string>
           <property name="minimumSize">
            <size>
             <width>70</width>
-            <height>22</height>
+            <height>15</height>
            </size>
           </property>
           <property name="maximumSize">
@@ -1527,7 +1646,46 @@ color: rgb(0, 0, 0);</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
+        <item row="3" column="1">
+         <widget class="QRadioButton" name="radioButton_RMWBITS">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>15</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <family>Franklin Gothic Medium</family>
+            <pointsize>11</pointsize>
+            <stylestrategy>PreferAntialias</stylestrategy>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>Modify regvalue bits (zeroes from AND term and ones from OR term will be written)</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(253, 251, 216);
+color: rgb(0, 0, 0);</string>
+          </property>
+          <property name="text">
+           <string>RMWbits</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
          <widget class="QRadioButton" name="radioButton_NIREAD">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1538,7 +1696,7 @@ color: rgb(0, 0, 0);</string>
           <property name="minimumSize">
            <size>
             <width>70</width>
-            <height>22</height>
+            <height>15</height>
            </size>
           </property>
           <property name="maximumSize">
@@ -1569,7 +1727,7 @@ color: rgb(0, 0, 0);</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
+        <item row="0" column="1">
          <widget class="QRadioButton" name="radioButton_WRITE">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1580,7 +1738,7 @@ color: rgb(0, 0, 0);</string>
           <property name="minimumSize">
            <size>
             <width>70</width>
-            <height>22</height>
+            <height>15</height>
            </size>
           </property>
           <property name="maximumSize">
@@ -1619,7 +1777,7 @@ color: rgb(0, 0, 0);</string>
           <property name="minimumSize">
            <size>
             <width>70</width>
-            <height>22</height>
+            <height>15</height>
            </size>
           </property>
           <property name="maximumSize">
@@ -1650,85 +1808,6 @@ color: rgb(0, 0, 0);</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
-         <widget class="QRadioButton" name="radioButton_RMWSUM">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>70</width>
-            <height>22</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>200</width>
-            <height>50</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <family>Franklin Gothic Medium</family>
-            <pointsize>11</pointsize>
-            <stylestrategy>PreferAntialias</stylestrategy>
-           </font>
-          </property>
-          <property name="toolTip">
-           <string>Increment regvalue by given number</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: rgb(0, 0, 0);
-background-color: rgb(255, 238, 214);
-</string>
-          </property>
-          <property name="text">
-           <string>RMWsum</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QRadioButton" name="radioButton_RMWBITS">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>70</width>
-            <height>22</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>200</width>
-            <height>50</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <family>Franklin Gothic Medium</family>
-            <pointsize>11</pointsize>
-            <stylestrategy>PreferAntialias</stylestrategy>
-           </font>
-          </property>
-          <property name="toolTip">
-           <string>Modify regvalue bits (zeroes from AND term and ones from OR term will be written)</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(253, 251, 216);
-color: rgb(0, 0, 0);</string>
-          </property>
-          <property name="text">
-           <string>RMWbits</string>
-          </property>
-         </widget>
-        </item>
        </layout>
       </widget>
       <widget class="QPushButton" name="pushButton_SEND">
@@ -1742,6 +1821,20 @@ color: rgb(0, 0, 0);</string>
        </property>
        <property name="text">
         <string>Send request</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_DetectMTU">
+       <property name="geometry">
+        <rect>
+         <x>632</x>
+         <y>9</y>
+         <width>49</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Detect
+MTU</string>
        </property>
       </widget>
      </widget>

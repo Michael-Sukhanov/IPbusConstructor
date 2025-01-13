@@ -6,15 +6,14 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow){
     ui->setupUi(this);
     setWindowTitle(QCoreApplication::applicationName() + " v" + QCoreApplication::applicationVersion());
-    coresspondingTypes["WRITE"]   = write;
-    coresspondingTypes["READ"]    = read;
-    coresspondingTypes["NIREAD"]  = nonIncrementingRead;
-    coresspondingTypes["NIWRITE"] = nonIncrementingWrite;
-    coresspondingTypes["RMWSUM"]  = RMWsum;
-    coresspondingTypes["RMWBITS"] = RMWbits;
     socket = new QUdpSocket(this);
     socket->setProxy(QNetworkProxy::NoProxy);
+    socket->bind(QHostAddress::AnyIPv4, 50012);
     writedata* window = new writedata(this);
+    ui->progressBar_WORDS         ->setMaximum(maxWordsPerPacket);
+    ui->progressBar_WORDS_EXPECTED->setMaximum(maxWordsPerPacket);
+    ui->progressBar_WORDS         ->setFormat("Request" " (%v/"+QString::number(maxWordsPerPacket)+" words)");
+    ui->progressBar_WORDS_EXPECTED->setFormat("Response"" (%v/"+QString::number(maxWordsPerPacket)+" words)");
 
     //find all radioButtons to connect them with onr slot
     QList<QRadioButton*> radioButtons = ui->centralwidget->findChildren<QRadioButton*>(QRegularExpression("radioButton_*"));
@@ -33,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
     //Adding transaction
     connect(ui->pushButton_ADD, &QPushButton::clicked, ui->treeWidget_REQUEST, [=](){
-        if(!ui->checkBox_RANDOMIZE_DATA->isChecked() && (ui->radioButton_WRITE->isChecked() || ui->radioButton_NIWRITE->isChecked())){
+        if(!ui->checkBox_RANDOMIZE_DATA->isChecked() && (ui->radioButton_WRITE->isChecked() || ui->radioButton_NIWRITE->isChecked() || ui->radioButton_CSWRITE->isChecked())){
             window ->show();
             return;}
         //in case packet was sent recently we need to clear both trees
@@ -99,6 +98,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->label_4->setText("");
     ui->label_ANDTERM->setText("");
     ui->checkBox_RANDOMIZE_DATA->hide();
+    ui->pushButton_DetectMTU->hide(); //MTU detection is not implemented yet
 
     getConfiguration();
     //clearSequence(response);
@@ -170,6 +170,7 @@ void MainWindow::makeRequestFromArray(const quint16 requestSize)
         quint32 address = request[reqWordsCounter + 1], ANDTerm = 0, ORTerm = 0;
         switch(type){
         case write:
+        case cfgSpaceWrite:
         case nonIncrementingWrite:{
             for(size_t i = reqWordsCounter + 2; i < reqWordsCounter + 2 + tr.Words; ++i)
                 writeData.append(request[i]);
@@ -188,6 +189,7 @@ void MainWindow::makeRequestFromArray(const quint16 requestSize)
             break;
         }
         case read:
+        case cfgSpaceRead:
         case nonIncrementingRead:{
             shift = 2;
             break;
@@ -208,7 +210,7 @@ MainWindow::~MainWindow(){
 
 void MainWindow::selectedTransactionChanged(const TransactionType type){
     currentType = type;
-    ui->checkBox_RANDOMIZE_DATA->setVisible(type == write || type == nonIncrementingWrite);
+    ui->checkBox_RANDOMIZE_DATA->setVisible(type == write || type == nonIncrementingWrite || type == cfgSpaceWrite);
     ui->lineEdit_ORTERM ->setVisible (type == RMWbits);
     ui->lineEdit_ANDTERM->setVisible (type == RMWbits || type == RMWsum);
     ui->lineEdit_NWORDS ->setDisabled(type == RMWbits || type == RMWsum);
@@ -375,7 +377,7 @@ void MainWindow::getConfiguration(){
 		request[i] = settings.value(QString::asprintf("%03d", i), "0").toString().toUInt(nullptr, 16);
     }
     settings.endGroup();
-	if(tmpSz)makeRequestFromArray(tmpSz); else foreach(auto w, QList<QProgressBar *>({ui->progressBar_WORDS, ui->progressBar_WORDS_EXPECTED})) w->setValue(0);
+    if(tmpSz)makeRequestFromArray(tmpSz); else foreach(auto w, QList<QProgressBar *>({ui->progressBar_WORDS, ui->progressBar_WORDS_EXPECTED})) w->setValue(0);
 }
 
 //take the last session values from GUI and store them into the file

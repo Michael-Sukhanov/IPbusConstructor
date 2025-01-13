@@ -1,5 +1,3 @@
-
-
 #ifndef IPBUSHEADERS_H
 #define IPBUSHEADERS_H
 
@@ -34,14 +32,14 @@ struct PacketHeader {
 };
 
 enum TransactionType {
-    read                  = 0,
-    write                 = 1,
-    nonIncrementingRead   = 2,
-    nonIncrementingWrite  = 3,
-    RMWbits               = 4,
-    RMWsum                = 5,
-    configurationRead     = 6,
-    configurationWrite    = 7
+    read                 = 0,
+    write                = 1,
+    nonIncrementingRead  = 2,
+    nonIncrementingWrite = 3,
+    RMWbits              = 4,
+    RMWsum               = 5,
+    cfgSpaceRead         = 6,
+    cfgSpaceWrite        = 7
 };
 struct TransactionHeader {
     quint32 InfoCode        :  4,
@@ -79,13 +77,15 @@ struct TransactionHeader {
     }
     QString typeIDString(){
         switch (TypeID) {
-			case read:                 return "Read             ";
-			case write:                return "Write            ";
-			case nonIncrementingRead:  return "Read  (non-incr.)";
+            case read                : return "Read             ";
+            case write               : return "Write            ";
+            case nonIncrementingRead : return "Read  (non-incr.)";
 			case nonIncrementingWrite: return "Write (non-incr.)";
-			case RMWbits:              return "RMWbits          ";
-			case RMWsum:               return "RMWsum           ";
-			default:                   return " !!! unknown !!! ";
+            case RMWbits             : return "RMWbits          ";
+            case RMWsum              : return "RMWsum           ";
+            case cfgSpaceRead        : return "Read  (cfg space)";
+            case cfgSpaceWrite       : return "Write (cfg space)";
+            default                  : return " !!! unknown !!! ";
         }
     }
 };

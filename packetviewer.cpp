@@ -43,7 +43,7 @@ void packetViewer::addIPbusPacketHeader(IPbusWord h){
     //Create IPbus Packet Header
     PacketHeader header = h ? PacketHeader(h) : PacketHeader(control);
     //Create parent Item with header
-	QTreeWidgetItem* headerItem = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf(" 0x%08X: Packet header", quint32(header)), "", QString::number(this->packetWords++)}), true, palette[6]);
+    QTreeWidgetItem* headerItem = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf(" 0x%08X: Packet header", quint32(header)), "", QString::number(this->packetWords++)}), true, palette[8]);
     //This flag needed to show, that this item is not editable and drageble, but enabled for watching
     headerItem->setFlags(Qt::ItemIsEnabled);
     ++expectedWords;
@@ -69,6 +69,7 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
     //Orders what to do while different transactions
     switch (type) {
         case nonIncrementingWrite:
+        case cfgSpaceWrite:
         case write: {for(quint8 i = 0; i < nWords; ++i)
                        createNewTreeWidgetItem(headerItem, new QStringList({hexFormatFor(wordData ? wordData->at(i) :QRandomGenerator::global()->generate()),
                                                                             QString::number(internalTransactionWords++),
@@ -88,6 +89,7 @@ void packetViewer::addIPbusTransaction(TransactionType type, const quint8 nWords
                     this->expectedWords++;
                     break;}
         case read:
+        case cfgSpaceRead:
         case nonIncrementingRead:{
                     this->expectedWords += nWords;
     }
@@ -101,7 +103,7 @@ void packetViewer::showPacket(IPbusWord * const response, const quint16 size, co
     QString erString;
     this->display = true;
     this->transactions = 0; this->packetWords = 0;
-	QTreeWidgetItem* packetHeader = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf(" 0x%08X: Packet header", response[0]), "", QString::number(this->packetWords++)}), true, palette[6]);
+    QTreeWidgetItem* packetHeader = createNewTreeWidgetItem(nullptr, new QStringList({QString::asprintf(" 0x%08X: Packet header", response[0]), "", QString::number(this->packetWords++)}), true, palette[8]);
     packetHeader->setFlags(Qt::ItemIsEnabled);
     while(this->packetWords < size){
         quint16 internalTransactionWords = 0;
@@ -137,6 +139,7 @@ void packetViewer::showPacket(IPbusWord * const response, const quint16 size, co
 
         switch(header.TypeID){
         case nonIncrementingRead:
+        case cfgSpaceRead:
         case read: {for(quint16 i = 0; i < header.Words; ++i)
                     createNewTreeWidgetItem(hiddenHeaders ? nullptr : parent,
                                               new QStringList({hexFormatFor(response[this->packetWords]),
@@ -151,6 +154,7 @@ void packetViewer::showPacket(IPbusWord * const response, const quint16 size, co
                                             QString::number(this->packetWords++)}))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
                     break;}
         case write:
+        case cfgSpaceWrite:
         case nonIncrementingWrite:
         default: break;
         }
@@ -275,12 +279,14 @@ void packetViewer::changeTransactionPosition(QTreeWidgetItem * const headerItem,
     //amount of expected words is changing too
     switch(header.TypeID){
     case nonIncrementingRead:
+    case cfgSpaceRead:
     case read:{this->expectedWords +=header.Words;
                break;}
     case RMWbits:
     case RMWsum:{this->expectedWords++;
                break;}
     case write:
+    case cfgSpaceWrite:
     case nonIncrementingWrite:
     default: break;
     }
